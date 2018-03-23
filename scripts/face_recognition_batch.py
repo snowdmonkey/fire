@@ -5,10 +5,12 @@ import cv2
 
 from fire.face.face_recognize import SimpleFaceRecognizer
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     handlers=[logging.StreamHandler()])
 
 logger = logging.getLogger(__name__)
+
+BATCH_SIZE = 50
 
 known_face_folder = Path("/home/xuefeng/fire-demo/wenxiang_face")
 recognizer = SimpleFaceRecognizer(known_face_folder)
@@ -20,7 +22,7 @@ cap = cv2.VideoCapture(video_path)
 fourcc = cv2.VideoWriter_fourcc(*'XVID')
 out = cv2.VideoWriter(output_path, fourcc, 20.0, (640, 480))
 
-logger.info("start")
+imgs = list()
 
 while True:
 
@@ -29,11 +31,15 @@ while True:
     if ret is False:
         break
 
-    input_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-    # logger.info("end to read a frame")
+    if len(imgs) < BATCH_SIZE:
+        input_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        imgs.append(input_frame)
+    else:
+        recognizer.batch_recognize(imgs)
+        imgs = list()
 
-    # logger.info("start to process a frame")
-    ids, boxes, scores = recognizer.recognize(input_frame)
+
+    # ids, boxes, scores = recognizer.recognize(input_frame)
     # logger.info("end to process a frame")
     # for name, box, score in zip(ids, boxes, scores):
     #    frame = cv2.rectangle(frame, (box.x, box.y), (box.x+box.w, box.y+box.h), (0, 0, 255), 1)
@@ -48,7 +54,7 @@ while True:
     # cv2.imshow("frame", frame)
     # if cv2.waitKey(25) & 0xFF == ord('q'):
     #     break
-logger.info("end")
+
 cap.release()
 out.release()
 # cv2.destroyAllWindows()
