@@ -1,9 +1,11 @@
-from fire.misc import Box
-from fire.equipment.presence_predict import TFPresencePredictor
-from pathlib import Path
-import pkg_resources
-import cv2
 import logging
+from pathlib import Path
+
+import cv2
+import pkg_resources
+from fire.misc import Box
+
+from src.fire.equipment.presence_predict import TFPresencePredictor
 
 GREEN = (0, 255, 0)
 RED = (0, 0, 255)

@@ -1,8 +1,10 @@
 import unittest
-import pkg_resources
-import cv2
 from pathlib import Path
-from fire.equipment.presence_predict import TFPresencePredictor
+
+import cv2
+import pkg_resources
+
+from src.fire.equipment.presence_predict import TFPresencePredictor
 
 
 class TFPredictorTest(unittest.TestCase):

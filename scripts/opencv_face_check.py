@@ -1,11 +1,10 @@
-import cv2
-
 import logging
-from pathlib import Path
 import time
+from pathlib import Path
+
 import cv2
 
-from fire.face.face_recognize import SimpleFaceRecognizer
+from src.fire.face.face_recognize import SimpleFaceRecognizer
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     handlers=[logging.StreamHandler()])

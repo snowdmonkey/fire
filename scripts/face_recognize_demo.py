@@ -3,7 +3,7 @@ from pathlib import Path
 
 import cv2
 
-from fire.face.face_recognize import SimpleFaceRecognizer
+from src.fire.face.face_recognize import SimpleFaceRecognizer
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     handlers=[logging.StreamHandler()])

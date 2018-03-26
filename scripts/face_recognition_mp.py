@@ -1,13 +1,12 @@
 import logging
+import time
+from multiprocessing import Pool, set_start_method
 from pathlib import Path
 
 import cv2
 import numpy as np
-import time
 
-from fire.face.face_recognize import SimpleFaceRecognizer
-from multiprocessing import Pool, Process, set_start_method
-
+from src.fire.face.face_recognize import SimpleFaceRecognizer
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     handlers=[logging.StreamHandler()])
