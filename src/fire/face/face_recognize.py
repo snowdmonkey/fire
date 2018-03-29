@@ -1,7 +1,7 @@
 import face_recognition
 import numpy as np
 import logging
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 from abc import ABC, abstractmethod
 from ..misc import Box
 from pathlib import Path
@@ -12,26 +12,32 @@ from multiprocessing import Pool
 class FaceRecognizer(ABC):
 
     @abstractmethod
-    def recognize(self, img: np.ndarray) -> Tuple[List[str], List[Box], List[float]]:
+    def recognize(self, img: np.ndarray) -> Tuple[List[int], List[Box], List[float]]:
         """
         detect and recognize all the faces in an image
-        :param img: img with faces to
-        :return: list of face_id, list of face bounding box, list of recognition confidence
+        :param img: img with faces to analysis
+        :return: list of result index, list of face bounding box, list of recognition confidence
         """
         pass
 
 
 class SimpleFaceRecognizer(FaceRecognizer):
 
-    def __init__(self, known_faces_folder: Path):
+    def __init__(self, known_faces_folder: Optional[Path] = None, face_encodings: Optional[List[List[float]]] = None):
         """
         constructor
         :param known_faces_folder: a folder that contains all known faces
+        :param face_encodings: list of face encodings, overwrite known_faces_folder if provided
         """
-        self._face_ids = list() # type: List[str]
-        self._face_encodings = list() # type: List[np.ndarray]
+        self._face_ids = list()  # type: List[str]
+        # self._face_encodings = list()  # type: List[np.ndarray]
         self._logger = logging.getLogger(self.__class__.__name__)
-        self._load_known_faces(known_faces_folder)
+        if face_encodings is not True:
+            self._face_encodings = face_encodings
+        elif known_faces_folder is not True:
+            self._load_known_faces(known_faces_folder)
+        else:
+            raise ValueError("need to provide known face encodings or known face pictures")
 
     def _load_known_faces(self, folder: Path):
         """
@@ -52,11 +58,11 @@ class SimpleFaceRecognizer(FaceRecognizer):
             else:
                 self._logger.error("fail to decode known face image {}".format(img_path))
 
-    def recognize(self, img: np.ndarray) -> Tuple[List[str], List[Box], List[float]]:
+    def recognize(self, img: np.ndarray) -> Tuple[List[int], List[Box], List[float]]:
 
         boxes = list()  # type: List[Box]
         scores = list()  # type: List[float]
-        ids = list()  # type: List[str]
+        ids = list()  # type: List[int]
 
         # face_locations = face_recognition.face_locations(img, equipment_model="cnn")
         face_locations = face_recognition.face_locations(img)
@@ -66,7 +72,7 @@ class SimpleFaceRecognizer(FaceRecognizer):
         for face_encoding in face_encodings:
             distance = face_recognition.face_distance(self._face_encodings, face_encoding)
             min_index = distance.argmin()
-            ids.append(self._face_ids[min_index])
+            ids.append(min_index)
             scores.append(1.0 - distance[min_index])
 
         for face_location in face_locations:

@@ -10,6 +10,7 @@ class EquipmentCamera(db.Model):
     ymin = db.Column(db.Float)
     ymax = db.Column(db.Float)
     factory_id = db.Column(db.Integer, db.ForeignKey("factories.id"))
+    equipment_id = db.Column(db.Integer, db.ForeignKey("equipments.id"))
 
     @property
     def dict(self):
@@ -33,6 +34,7 @@ class EquipmentActiveCamera(db.Model):
     ymin = db.Column(db.Float)
     ymax = db.Column(db.Float)
     factory_id = db.Column(db.Integer, db.ForeignKey("factories.id"))
+    equipment_id = db.Column(db.Integer, db.ForeignKey("equipments.id"))
 
     @property
     def dict(self):

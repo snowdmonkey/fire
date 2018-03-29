@@ -1,0 +1,668 @@
+swagger: "2.0"
+
+info:
+  description: API document for 3CF video analysis component
+  version: 1.0.0
+  title: 3CF Video Analysis Component
+  contact:
+    email: xuefeng.liu@honeywell.com
+
+host: 127.0.0.1:5000
+basePath: /
+tags:
+  - name: factory
+    description: all about factories
+  - name: worker
+    description: all about workers
+  - name: equipment
+    description: all about equipments
+  - name: workstation
+    description: all about workstations
+  - name: face
+    description: all about faces
+  - name: camera
+    description: all about cameras
+  - name: task
+    description: all about tasks
+  - name: equipment model
+    description: all about models for verify equipment existence
+
+schemes:
+  - http
+
+paths:
+  /factory:
+    get:
+      tags:
+       - factory
+      summary: get a list of factories
+      produces:
+        - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Factory"
+    post:
+      tags:
+        - factory
+      summary: add a factory
+      produces:
+        - text/html
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: "#/definitions/Factory"
+      responses:
+        200:
+          description: OK
+        400:
+          description: request parameter missing
+
+  /factory/{factoryId}:
+    get:
+      tags:
+        - factory
+      summary: get a factory by id
+      produces:
+        - application/json
+      parameters:
+        - name: factoryId
+          in: path
+          required: true
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/Factory"
+        404:
+          description: resource not found
+
+  /factory/{factoryId}/worker:
+    get:
+      tags:
+        - worker
+      summary: get worker list with factoryId and worker name
+      produces:
+        - application/json
+      parameters:
+        - name: factoryId
+          in: path
+          required: true
+        - name: name
+          in: query
+          type: string
+      responses:
+        200:
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Worker"
+        400:
+          description: need to provide worker name
+    post:
+      tags:
+        - worker
+      summary: add a worker to a factory
+      produces:
+        - text/html
+      parameters:
+        - name: factoryId
+          in: path
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: "#/definitions/Worker"
+      responses:
+        200:
+          description: OK
+        400:
+          description: request body missing parameters
+
+  /factory/{factoryId}/worker/{workerEid}:
+    get:
+      tags:
+        - worker
+      summary: get a worker by factoryId and eid
+      produces:
+        - application/json
+      parameters:
+        - name: factoryId
+          type: integer
+          in: path
+        - name: workerEid
+          type: string
+          in: path
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/Worker"
+
+  /factory/{factory_id}/workstation:
+    get:
+      tags:
+        - workstation
+      summary: get a list of workstation
+      produces:
+        - application/json
+      parameters:
+        - name: factory_id
+          type: integer
+          required: true
+        - name: nameContain
+          type: string
+          required: false
+      responses:
+        200:
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/WorkerStation"
+    post:
+      tags:
+        - workstation
+      summary: add a workstation to a factory
+      produces:
+        - text/html
+      parameters:
+        - name: body
+          in: body
+          schema:
+            type: object
+            properties:
+              name:
+                type: string
+
+  /factory/{factory_id}/workstation/{workstation_id}:
+    get:
+      tags:
+       - workstation
+      summary: get workstation by id
+      produces:
+        - 'application/json'
+      parameters:
+        - name: factory_id
+          type: integer
+          required: true
+          in: path
+        - name: workstation_id
+          type: integer
+          required: true
+          in: path
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/WorkerStation"
+
+  /factory/{factory_id}/workstation/{workstation_id}/worker:
+    get:
+      tags:
+        - workstation
+      summary: get worker list of a workstation
+      produces:
+        - application/json
+      parameters:
+        - name: factory_id
+          type: integer
+          required: true
+          in: path
+        - name: workerstation_id
+          type: integer
+          required: true
+      responses:
+        200:
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Worker"
+        404:
+          description: factory or workstation not found
+    post:
+      tags:
+        - workstation
+      summary: add a worker to a station
+      produces:
+        - text/html
+      parameters:
+        - name: body
+          in: body
+          schema:
+            type: object
+            properties:
+              eid:
+                type: string
+      responses:
+        200:
+          description: OK
+        400:
+          description: worker eid missing
+
+  /factory/{factory_id}/worker/{eid}/face:
+    get:
+      tags:
+        - face
+      summary: get faces of a worker
+      produces:
+        - application/json
+      parameters:
+        - name: factory_id
+          type: integer
+          required: true
+          in: path
+        - name: eid
+          type: string
+          required: true
+          in: path
+      responses:
+        200:
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Face"
+        404:
+          description: worker not found
+    post:
+      tags:
+        - face
+      summary: add a face
+      consumes:
+        - multipart/form-data
+      produces:
+        - text/html
+      parameters:
+        - name: factory_id
+          type: integer
+          required: true
+          in: path
+        - name: eid
+          type: string
+          required: true
+          in: path
+        - name: file
+          type: file
+          in: formData
+          description: an image of the face to upload
+      responses:
+        200:
+          description: OK
+        400:
+          description: face encoding failed
+
+  /face/{face_id}/img:
+    get:
+      tags:
+        - face
+      summary: get face image
+      parameters:
+        - name: face_id
+          type: integer
+          required: true
+          in: path
+      produces:
+        - image/jpeg
+      responses:
+        200:
+          description: OK
+
+  /factory/{factory_id}/equipment_camera:
+    get:
+      tags:
+        - camera
+      summary: get equipment camera list
+      parameters:
+        - name: factory_id
+          type: integer
+          required: true
+          in: path
+      produces:
+        - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/EquipmentCamera"
+    post:
+      tags:
+        - camera
+      summary: add a equipment camera
+      parameters:
+        - name: factory_id
+          type: integer
+          required: true
+          in: path
+        - name: body
+          in: body
+          schema:
+            type: object
+            properties:
+              uri:
+                type: string
+              xmin:
+                type: number
+              xmax:
+                type: number
+              ymin:
+                type: number
+              ymax:
+                type: number
+      produces:
+        - text/html
+      responses:
+        200:
+          description: OK
+
+  /factory/{factory_id}/equipment_active_camera:
+    get:
+      tags:
+        - camera
+      summary: get equipment active camera list
+      parameters:
+        - name: factory_id
+          type: integer
+          required: true
+          in: path
+      produces:
+        - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/EquipmentActiveCamera"
+    post:
+      tags:
+        - camera
+      summary: add a equipment active camera
+      parameters:
+        - name: factory_id
+          type: integer
+          required: true
+          in: path
+        - name: body
+          in: body
+          schema:
+            type: object
+            properties:
+              uri:
+                type: string
+              xmin:
+                type: number
+              xmax:
+                type: number
+              ymin:
+                type: number
+              ymax:
+                type: number
+      produces:
+        - text/html
+      responses:
+        200:
+          description: OK
+
+  /workstation/{workstation_id}/camera:
+    get:
+      tags:
+        - camera
+      summary: get a camera for workstation
+      parameters:
+        - name: workstation_id
+          type: integer
+          in: path
+      produces:
+        - 'application/json'
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/WorkstationCamera"
+    put:
+      tags:
+        - camera
+      summary: set the camera for a workstation
+      parameters:
+        - name: workstation
+          type: string
+          required: true
+          in: path
+        - name: body
+          in: body
+          schema:
+            type: object
+            properties:
+              uri:
+                type: string
+      produces:
+        - text/html
+      responses:
+        200:
+          description: OK
+
+  /factory/{factory_id}/equipment:
+    post:
+      tags:
+        - equipment
+      summary: add a equipment
+      description: add an equipment to a factory
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              equipmentId:
+                type: integer
+        - name: factory_id
+          in: path
+          required: true
+      produces:
+        - text/html
+      responses:
+        200:
+          description: OK
+        400:
+          description: equipemnt id not provided
+        404:
+          description: factory not found
+        500:
+          description: write to database failed
+
+  /factory/{factory_id}/workstation/{workstation_id}/equipment:
+    post:
+      tags:
+        - equipment
+      summary: add an equipment
+      description: If the equipemt id exists, add the equipmen to the workstation else, create the equipment record and add it to the factory and workstation.
+      parameters:
+        - name: factory_id
+          type: integer
+          required: true
+          in: path
+        - name: workstation_id
+          type: integer
+          required: true
+          in: path
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              equipmentId:
+                type: integer
+      produces:
+        - text/html
+      responses:
+        200:
+          description: OK
+        400:
+          description: equipment not belong to this factory
+        404:
+          description: factory or workstation not found
+        500:
+          description: database write error
+
+  /task/keyperson/workstation/{workstation_id}:
+    post:
+      tags:
+       - task
+      summary: trigger a key person task
+      parameters:
+        - name: workstation_id
+          type: string
+          in: path
+
+
+
+
+
+
+
+definitions:
+  Factory:
+    type: object
+    properties:
+      id:
+        type: number
+        example: 1
+      name:
+        type: string
+        example: 圣赛尔
+      description:
+        type: string
+
+  Worker:
+    type: object
+    properties:
+      eid:
+        type: string
+        example: H232559
+      name:
+        type: string
+        example: 刘雪峰
+
+  WorkerStation:
+    type: object
+    properties:
+      id:
+        type: integer
+        example: 1
+      name:
+        type: string
+      factoryId:
+        type: integer
+      workers:
+        type: array
+        items:
+          $ref: "#/definitions/Worker"
+
+  Face:
+    type: object
+    properties:
+      id:
+        type: integer
+      eid:
+        type: string
+      factoryId:
+        type: integer
+      encoding:
+        type: array
+        items:
+          type: number
+
+  EquipmentCamera:
+    type: object
+    properties:
+      id:
+        type: integer
+      uri:
+        type: string
+      xmin:
+        type: number
+      xmax:
+        type: number
+      ymin:
+        type: number
+      ymax:
+        type: number
+      factoryId:
+        type: integer
+
+  EquipmentActiveCamera:
+    type: object
+    properties:
+      id:
+        type: integer
+      uri:
+        type: string
+      xmin:
+        type: number
+      xmax:
+        type: number
+      ymin:
+        type: number
+      ymax:
+        type: number
+      factoryId:
+        type: integer
+
+  WorkstationCamera:
+    type: object
+    properties:
+      id:
+        type: integer
+      uri:
+        type: string
+      workstationId:
+        type: integer
+
+  Task:
+    type: object
+    properties:
+      id:
+        type: integer
+      type:
+        type: string
+        enum:
+          - keyperson
+          - equipment
+          - equipment_active
+      createTime:
+        type: string
+        format: 'date-time'
+        example: 2018-03-29T18:20:01
+      context:
+        type: string
+        description: a json string as the task queue payload
+      status:
+        type: string
+        enum:
+          - created
+          - ongoing
+          - success
+          - fail
+      result:
+        type: string
+        description: a json string as the result
+      startTime:
+        type: string
+        format: 'date-time'
+        example: 2018-03-29T19:24:21
+      endTime:
+        type: string
+        format: 'date-time'
+        example: 2018-03-29T19:25:30

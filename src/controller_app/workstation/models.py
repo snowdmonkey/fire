@@ -24,13 +24,14 @@ class WorkStation(db.Model):
         lazy="subquery",
         backref=db.backref("workers", lazy=True))
     camera = db.relationship("WorkstationCamera", backref="workstation", uselist=False, lazy=True)
+    equipments = db.relationship("Workstation", backref="workstation", lazy=True)
 
     @property
     def dict(self):
         return {
             "id": self.id,
             "name": self.name,
-            "factory_id": self.factory_id,
+            "factoryId": self.factory_id,
             "workers": [worker.dict for worker in self.workers]
         }
 
