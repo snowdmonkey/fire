@@ -35,9 +35,11 @@ def add_workstation(factory_id: int):
 
     request_body = request.get_json()
     workstation_name = request_body.get("name")
+    workstation_id = request_body.get("workstationId")
+    description = request_body.get("description")
     if workstation_name is None:
         abort(400, "need a name for workstation")
-    workstation = WorkStation(name=workstation_name)
+    workstation = WorkStation(id=workstation_id ,name=workstation_name, description=description)
     factory.workstations.append(workstation)
     # db.session.add(workstation)
     db.session.commit()

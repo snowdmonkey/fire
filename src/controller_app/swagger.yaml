@@ -178,8 +178,16 @@ paths:
           schema:
             type: object
             properties:
+              workstationId:
+                type: integer
               name:
                 type: string
+              description:
+                type: string
+      responses:
+        200:
+          description: OK
+
 
   /factory/{factory_id}/workstation/{workstation_id}:
     get:
@@ -315,141 +323,101 @@ paths:
         200:
           description: OK
 
-  /factory/{factory_id}/equipment_camera:
-    get:
-      tags:
-        - camera
-      summary: get equipment camera list
-      parameters:
-        - name: factory_id
-          type: integer
-          required: true
-          in: path
-      produces:
-        - application/json
-      responses:
-        200:
-          description: OK
-          schema:
-            type: array
-            items:
-              $ref: "#/definitions/EquipmentCamera"
-    post:
-      tags:
-        - camera
-      summary: add a equipment camera
-      parameters:
-        - name: factory_id
-          type: integer
-          required: true
-          in: path
-        - name: body
-          in: body
-          schema:
-            type: object
-            properties:
-              uri:
-                type: string
-              xmin:
-                type: number
-              xmax:
-                type: number
-              ymin:
-                type: number
-              ymax:
-                type: number
-      produces:
-        - text/html
-      responses:
-        200:
-          description: OK
-
-  /factory/{factory_id}/equipment_active_camera:
-    get:
-      tags:
-        - camera
-      summary: get equipment active camera list
-      parameters:
-        - name: factory_id
-          type: integer
-          required: true
-          in: path
-      produces:
-        - application/json
-      responses:
-        200:
-          description: OK
-          schema:
-            type: array
-            items:
-              $ref: "#/definitions/EquipmentActiveCamera"
-    post:
-      tags:
-        - camera
-      summary: add a equipment active camera
-      parameters:
-        - name: factory_id
-          type: integer
-          required: true
-          in: path
-        - name: body
-          in: body
-          schema:
-            type: object
-            properties:
-              uri:
-                type: string
-              xmin:
-                type: number
-              xmax:
-                type: number
-              ymin:
-                type: number
-              ymax:
-                type: number
-      produces:
-        - text/html
-      responses:
-        200:
-          description: OK
-
-  /workstation/{workstation_id}/camera:
-    get:
-      tags:
-        - camera
-      summary: get a camera for workstation
-      parameters:
-        - name: workstation_id
-          type: integer
-          in: path
-      produces:
-        - 'application/json'
-      responses:
-        200:
-          description: OK
-          schema:
-            $ref: "#/definitions/WorkstationCamera"
+  /camera/equipment_camera/equipment/{equipmentId}:
     put:
       tags:
         - camera
-      summary: set the camera for a workstation
+      summary: set camera
+      description: add and set the camera for chekcing equipment exsistence for an equipment
       parameters:
-        - name: workstation
-          type: string
+        - name: equipmentId
+          type: integer
           required: true
           in: path
         - name: body
           in: body
+          required: true
           schema:
             type: object
             properties:
+              cameraId:
+                type: string
               uri:
                 type: string
+              xmin:
+                type: number
+              xmax:
+                type: number
+              ymin:
+                type: number
+              ymax:
+                type: number
       produces:
         - text/html
       responses:
         200:
           description: OK
+
+  /camera/equipment_active_camera/equipment/{equipmentId}:
+    put:
+      tags:
+        - camera
+      summary: set camera
+      description: add and set the camera for chekcing equipment activity for an equipment
+      parameters:
+        - name: equipmentId
+          type: integer
+          required: true
+          in: path
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              cameraId:
+                type: string
+              uri:
+                type: string
+              xmin:
+                type: number
+              xmax:
+                type: number
+              ymin:
+                type: number
+              ymax:
+                type: number
+      produces:
+        - text/html
+      responses:
+        200:
+          description: OK
+
+  /camera/keyperson_camera/workstation/{workstationId}:
+    put:
+      tags:
+        - camera
+      summary: set a keyperson camera
+      description: set the keyperson camera for a workstation
+      parameters:
+        - name: workstationId
+          type: integer
+          required: true
+          in: path
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              cameraId:
+                type: string
+              uri:
+                type: string
+      responses:
+        200:
+          description: OK
+
 
   /factory/{factory_id}/equipment:
     post:
@@ -516,17 +484,112 @@ paths:
         500:
           description: database write error
 
-  /task/keyperson/workstation/{workstation_id}:
+  /task/equipment/equipemnt/{equipmendId}:
     post:
       tags:
-       - task
-      summary: trigger a key person task
+        - task
+      summary: trigger a task
+      description: trigger a task to check whether an equipment is still there
       parameters:
-        - name: workstation_id
-          type: string
+        - name: equipmentId
+          type: integer
+          required: true
           in: path
+        - name: body
+          in: body
+          schema:
+            type: object
+            properties:
+              deadline:
+                type: string
+                format: 'date-time'
+                example: 2018-03-30T12:20:21
+      produces:
+        - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/Task"
+        400:
+          description: argument missing or in wrong format
+        404:
+          description: equipment not found
+        500:
+          description: database or message queue error
 
+  /task/equipment_active/equipemnt/{equipmendId}:
+    post:
+      tags:
+        - task
+      summary: trigger a task
+      description: trigger a task to check whether an equipment is active
+      parameters:
+        - name: equipmentId
+          type: integer
+          required: true
+          in: path
+        - name: body
+          in: body
+          schema:
+            type: object
+            properties:
+              deadline:
+                type: string
+                format: 'date-time'
+                example: 2018-03-30T12:20:21
+                description: deadline for the task, if the task starts later than this time, it fails
+      produces:
+        - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/Task"
+        400:
+          description: argument missing or in wrong format
+        404:
+          description: equipment not found
+        500:
+          description: database or message queue error
 
+  task/keyperson/workstation/{workstationId}:
+    post:
+      tags:
+        - task
+      summary: trigger a task
+      description: trigger a key person check task
+      parameters:
+        - name: workstationId
+          type: integer
+          required: true
+          in: path
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              deadline:
+                type: string
+                format: 'date-time'
+                example: 2018-03-30T12:20:21
+              duration:
+                type: integer
+                description: how long this task should run for, in seconds
+      produces:
+        - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/Task"
+        400:
+          description: argument missing or in wrong format
+        404:
+          description: equipment not found
+        500:
+          description: database or message queue error
 
 
 
@@ -599,7 +662,7 @@ definitions:
         type: number
       ymax:
         type: number
-      factoryId:
+      equipmentId:
         type: integer
 
   EquipmentActiveCamera:
@@ -617,7 +680,7 @@ definitions:
         type: number
       ymax:
         type: number
-      factoryId:
+      equipmentId:
         type: integer
 
   WorkstationCamera:

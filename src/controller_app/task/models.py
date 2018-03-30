@@ -19,12 +19,13 @@ class TaskStatus(enum.Enum):
 class Task(db.Model):
     __tablename__ = "tasks"
     id = db.Column(db.Integer, primary_key=True)
-    type = db.Column(db.Enum(TaskType))
+    type = db.Column(db.Enum(TaskType), index=True)
+    deadline = db.Column(db.DATETIME)
     create_time = db.Column(db.DATETIME)
     start_time = db.Column(db.DATETIME)
     end_time = db.Column(db.DATETIME)
     context = db.Column(db.TEXT)
-    status = db.Column(db.Enum(TaskStatus))
+    status = db.Column(db.Enum(TaskStatus), index=True)
     result = db.Column(db.TEXT)
 
     @property
@@ -33,6 +34,7 @@ class Task(db.Model):
             "id": self.id,
             "type": self.type.name,
             "createTime": datetime.strftime(self.create_time, "%Y-%m-%dT%H:%M:%S"),
+            "deadline": datetime.strftime(self.deadline, "%Y-%m-%dT%H:%M:%S"),
             "context": self.context,
             "status": self.status.name,
             "result": self.result}
