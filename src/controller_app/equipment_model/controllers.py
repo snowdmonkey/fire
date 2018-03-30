@@ -36,11 +36,12 @@ def set_equipment_mode(factory_id: int):
     factory = Factory.query.get_or_404(factory_id)
 
     pb_file = request.files.get("file")
+    # print(request.files)
     if pb_file is None:
         abort(400, "need a pb file")
 
-    request_json = request.get_json()
-    mapping = request_json.get("mapping")
+    request_form = request.form
+    mapping = request_form.get("mapping")
     if mapping is None:
         abort(400, "need to provide class mapping in json body")
 

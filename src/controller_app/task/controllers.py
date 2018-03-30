@@ -10,7 +10,7 @@ from kafka import KafkaProducer
 from .models import Task, TaskType, TaskStatus
 from ..database import db
 from ..factory.models import Factory
-from ..workstation.models import WorkStation
+from ..workstation.models import Workstation
 from ..equipment.models import Equipment
 
 task_bp = Blueprint("task", __name__)
@@ -18,7 +18,7 @@ task_bp = Blueprint("task", __name__)
 logger = logging.getLogger(__name__)
 
 
-@task_bp.route("task/equipment/equipment/<int:equipment_id>", methods=["POST"])
+@task_bp.route("/task/equipment/equipment/<int:equipment_id>", methods=["POST"])
 def add_equipment_task(equipment_id: int):
     body = request.get_json()
     deadline = body.get("deadline")
@@ -60,7 +60,7 @@ def add_equipment_task(equipment_id: int):
         return jsonify(task.dict)
 
 
-@task_bp.route("task/equipment_active/equipment/<int:equipment_id>", methods=["POST"])
+@task_bp.route("/task/equipment_active/equipment/<int:equipment_id>", methods=["POST"])
 def add_equipment_active_task(equipment_id: int):
     body = request.get_json()
     deadline = body.get("deadline")
@@ -102,8 +102,8 @@ def add_equipment_active_task(equipment_id: int):
         return jsonify(task.dict)
 
 
-@task_bp.route("task/keyperson/workstation/<int:workstation_id>", methods=["POST"])
-def add_equipment_active_task(workstation_id: int):
+@task_bp.route("/task/keyperson/workstation/<int:workstation_id>", methods=["POST"])
+def add_keyperson_task(workstation_id: int):
     body = request.get_json()
     deadline = body.get("deadline")
     duration = body.get("duration")
@@ -117,7 +117,7 @@ def add_equipment_active_task(workstation_id: int):
     if not isinstance(duration, int):
         abort(400, "task duration not provided or is not integer")
 
-    workstation = WorkStation.query.get_or_404(workstation_id)
+    workstation = Workstation.query.get_or_404(workstation_id)
 
     if workstation.camera is None:
         abort(400, "no camera is registered for this workstation for checking existence")

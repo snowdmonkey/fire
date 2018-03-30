@@ -13,7 +13,7 @@ worker_location = db.Table(
 )
 
 
-class WorkStation(db.Model):
+class Workstation(db.Model):
     __tablename__ = "workstations"
     id = db.Column(db.Integer, primary_key=True, autoincrement=False)
     name = db.Column(db.String(50))
@@ -25,7 +25,7 @@ class WorkStation(db.Model):
         lazy="subquery",
         backref=db.backref("workers", lazy=True))
     camera = db.relationship("WorkstationCamera", backref="workstation", uselist=False, lazy=True)
-    equipments = db.relationship("Workstation", backref="workstation", lazy=True)
+    equipments = db.relationship("Equipment", backref="workstation", lazy=True)
 
     @property
     def dict(self):

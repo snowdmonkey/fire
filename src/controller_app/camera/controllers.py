@@ -3,7 +3,7 @@ from flask import Blueprint, request, abort
 from .models import EquipmentActiveCamera, EquipmentCamera, WorkstationCamera
 from ..database import db
 from ..equipment.models import Equipment
-from ..workstation.models import WorkStation
+from ..workstation.models import Workstation
 
 camera_bp = Blueprint("camera", __name__)
 
@@ -58,7 +58,7 @@ camera_bp = Blueprint("camera", __name__)
 #
 # @camera_bp.route("/workstation/<int:workstation_id>/camera", methods=["GET"])
 # def get_camera_of_station(workstation_id: int):
-#     workstation = WorkStation.query.get_or_404(workstation_id)
+#     workstation = Workstation.query.get_or_404(workstation_id)
 #     camera = workstation.camera
 #     if camera is None:
 #         abort(404, "No camera information for this workstation")
@@ -72,7 +72,7 @@ camera_bp = Blueprint("camera", __name__)
 #         abort(400, "need to provide camera uri")
 #
 #     camera = WorkstationCamera(uri=request_json.get("uri"))
-#     workstation = WorkStation.query.get_or_404(workstation_id)
+#     workstation = Workstation.query.get_or_404(workstation_id)
 #     workstation.camera = camera
 #     db.session.commit()
 #     return "OK"
@@ -120,7 +120,7 @@ def set_keyperson_camera(workstation_id: int):
     if not {"uri", "cameraId"}.issubset(request_json):
         abort(400, "need to provide cameraId uri, in json body")
 
-    workstation  = WorkStation.query.get_or_404(workstation_id)
+    workstation  = Workstation.query.get_or_404(workstation_id)
     camera = WorkstationCamera(id=request_json.get("cameraId"), uri=request_json.get("uri"))
     workstation.camera = camera
     db.session.commit()

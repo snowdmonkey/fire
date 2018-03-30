@@ -1,4 +1,5 @@
 from ..database import db
+from sqlalchemy.dialects.mysql import MEDIUMBLOB
 import json
 
 
@@ -8,7 +9,7 @@ class Face(db.Model):
     worker_eid = db.Column(db.String(20))
     factory_id = db.Column(db.Integer)
     encoding = db.Column(db.TEXT)
-    img = db.Column(db.LargeBinary)
+    img = db.Column(MEDIUMBLOB)
 
     @property
     def dict(self):

@@ -56,7 +56,14 @@ paths:
           in: body
           required: true
           schema:
-            $ref: "#/definitions/Factory"
+            type: object
+            properties:
+              factoryId:
+                type: integer
+              name:
+                type: string
+              description:
+                type: string
       responses:
         200:
           description: OK
@@ -114,6 +121,7 @@ paths:
       parameters:
         - name: factoryId
           in: path
+          required: true
         - name: body
           in: body
           required: true
@@ -184,6 +192,10 @@ paths:
                 type: string
               description:
                 type: string
+        - name: factory_id
+          in: path
+          type: integer
+          required: true
       responses:
         200:
           description: OK
@@ -244,11 +256,20 @@ paths:
       parameters:
         - name: body
           in: body
+          required: true
           schema:
             type: object
             properties:
               eid:
                 type: string
+        - name: factory_id
+          in: path
+          required: true
+          type: integer
+        - name: workstation_id
+          in: path
+          type: integer
+          required: true
       responses:
         200:
           description: OK
@@ -434,6 +455,8 @@ paths:
             properties:
               equipmentId:
                 type: integer
+              description:
+                type: string
         - name: factory_id
           in: path
           required: true
@@ -484,7 +507,7 @@ paths:
         500:
           description: database write error
 
-  /task/equipment/equipemnt/{equipmendId}:
+  /task/equipment/equipment/{equipmentId}:
     post:
       tags:
         - task
@@ -518,7 +541,7 @@ paths:
         500:
           description: database or message queue error
 
-  /task/equipment_active/equipemnt/{equipmendId}:
+  /task/equipment_active/equipment/{equipmentId}:
     post:
       tags:
         - task
@@ -553,7 +576,7 @@ paths:
         500:
           description: database or message queue error
 
-  task/keyperson/workstation/{workstationId}:
+  /task/keyperson/workstation/{workstationId}:
     post:
       tags:
         - task
@@ -591,9 +614,81 @@ paths:
         500:
           description: database or message queue error
 
+  /task/{taskId}:
+    get:
+      tags:
+        - task
+      summary: get a task status
+      parameters:
+        - name: taskId
+          type: integer
+          required: true
+          in: path
+      produces:
+        - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/Task"
 
+  /factory/{factoryId}/equipment_model/pb:
+    get:
+      tags:
+        - equipment model
+      summary: get model file
+      parameters:
+        - name: factoryId
+          type: integer
+          required: true
+          in: path
+      produces:
+        - 'application/octet-stream'
+      responses:
+        200:
+          description: OK
 
-
+  /factory/{factoryId}/equipment_model:
+    get:
+      tags:
+        - equipment model
+      summary: get model description
+      parameters:
+        - name: factoryId
+          type: integer
+          required: true
+          in: path
+      produces:
+        - applicaiton/json
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/EquipmentModel"
+    put:
+      tags:
+        - equipment model
+      summary: set model
+      description: set ML model for a factory to check the existence of the machines
+      parameters:
+        - name: factoryId
+          type: integer
+          required: true
+          in: path
+        - name: file
+          type: file
+          in: formData
+          description: model file to upload
+        - name: mapping
+          in: formData
+          type: string
+      consumes:
+        - multipart/form-data
+      produces:
+        - text/html
+      responses:
+        200:
+          description: OK
 
 definitions:
   Factory:
@@ -729,3 +824,15 @@ definitions:
         type: string
         format: 'date-time'
         example: 2018-03-29T19:25:30
+
+  EquipmentModel:
+    type: object
+    properties:
+      id:
+        type: integer
+      factoryId:
+        type: integer
+      mapping:
+        type: string
+      md5:
+        type: string

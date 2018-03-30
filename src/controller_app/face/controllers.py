@@ -15,7 +15,7 @@ face_bp = Blueprint("face", __name__)
 
 @face_bp.route("/factory/<int:factory_id>/worker/<string:eid>/face", methods=["GET"])
 def get_faces_of_worker(factory_id: int, eid: str):
-    worker = Worker.query.filter_by(eid=eid, factory_id=factory_id).fist_or_404()
+    worker = Worker.query.filter_by(eid=eid, factory_id=factory_id).first_or_404()
     return jsonify([face.dict for face in worker.faces])
 
 
@@ -25,7 +25,7 @@ def get_face_image_by_id(face_id: int):
     return send_file(io.BytesIO(face.img),
                      mimetype="image/jpeg",
                      as_attachment=True,
-                     attachment_filename="{}.jpg".format(face.worker.name))
+                     attachment_filename="{}.jpg".format(face_id))
 
 
 @face_bp.route("/factory/<int:factory_id>/worker/<string:eid>/face", methods=["POST"])

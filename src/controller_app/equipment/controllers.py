@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request, abort
 from ..database import db
 from ..factory.models import Factory
-from ..workstation.models import WorkStation
+from ..workstation.models import Workstation
 from .models import Equipment
 import logging
 
@@ -15,9 +15,10 @@ def add_equipment(factory_id: int):
     factory = Factory.query.get_or_404(factory_id)
     request_body = request.get_json()
     equipment_id = request_body.get("equipmentId")
+    description = request_body.get("description")
     if equipment_id is None:
         abort(400, "need to provide equipment id")
-    equipment = Equipment(id=int(equipment_id))
+    equipment = Equipment(id=int(equipment_id), description=description)
     try:
         factory.equipments.append(equipment)
         db.session.commit()
@@ -38,7 +39,7 @@ def add_equipment_to_workstation(factory_id: int, workstation_id: int):
         equipment_id = int(equipment_id)
 
     factory = Factory.query.get_or_404(factory_id)
-    workstation = WorkStation.query.get_or_404(workstation_id)
+    workstation = Workstation.query.get_or_404(workstation_id)
     if workstation.factory_id != factory_id:
         abort(400, "workstation does not belong to this factory")
 

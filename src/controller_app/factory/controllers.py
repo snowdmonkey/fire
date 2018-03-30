@@ -28,12 +28,15 @@ def get_factory_by_id(factory_id: int):
 @factory_bp.route("/factory", methods=["POST"])
 def add_factory():
     post_body = request.get_json()
+    factory_id = post_body.get("factoryId")
     factory_name = post_body.get("name")
     factory_description = post_body.get("description")
+    if factory_id is None:
+        abort(400, "need to provide factory id")
     if factory_name is None:
         abort(400, "need to provide factory name")
     else:
-        factory = Factory(name=factory_name, description=factory_description)
+        factory = Factory(id=factory_id, name=factory_name, description=factory_description)
         db.session.add(factory)
         db.session.commit()
     return "OK"
