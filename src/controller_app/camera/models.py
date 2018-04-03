@@ -4,7 +4,7 @@ from ..database import db
 class EquipmentCamera(db.Model):
     __tablename__ = "equipment_cameras"
     id = db.Column(db.String(60), primary_key=True)
-    uri = db.Column(db.String(100), unique=True)
+    uri = db.Column(db.String(300), unique=True)
     xmin = db.Column(db.Float)
     xmax = db.Column(db.Float)
     ymin = db.Column(db.Float)
@@ -28,7 +28,7 @@ class EquipmentCamera(db.Model):
 class EquipmentActiveCamera(db.Model):
     __tablename__ = "equipment_active_cameras"
     id = db.Column(db.String(60), primary_key=True)
-    uri = db.Column(db.String(100), unique=True)
+    uri = db.Column(db.String(300), unique=True)
     xmin = db.Column(db.Float)
     xmax = db.Column(db.Float)
     ymin = db.Column(db.Float)
@@ -50,9 +50,9 @@ class EquipmentActiveCamera(db.Model):
 
 
 class WorkstationCamera(db.Model):
-    __tablename__ = "workstation_camera"
+    __tablename__ = "workstation_cameras"
     id = db.Column(db.String(60), primary_key=True)
-    uri = db.Column(db.String(100), unique=True)
+    uri = db.Column(db.String(300), unique=True)
     workstation_id = db.Column(db.Integer, db.ForeignKey("workstations.id"))
 
     @property

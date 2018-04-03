@@ -10,11 +10,11 @@ from ..misc import Box
 class PresencePredictor(ABC):
 
     @abstractmethod
-    def predict(self, img: np.ndarray, roi: Optional[Box] = None) -> Tuple[float, bool]:
+    def predict(self, img: np.ndarray) -> Tuple[float, bool]:
         """
         take in a picture of ROI and predict whether the equipment still exists
         :param img: 3-d array of the img to predict, of size HxWxC, channel order RGB
-        :param roi: region of interest box
+        # :param roi: region of interest box
         :return: existence confidence, existence conclusion
         """
         pass
@@ -46,9 +46,9 @@ class TFPresencePredictor(PresencePredictor):
             tf.import_graph_def(graph_def)
         return graph
 
-    def predict(self, img: np.ndarray, box: Optional[Box] = None) -> Tuple[float, bool]:
-        if box is not None:
-            img = img[box.y: (box.y+box.h), box.x: (box.x+box.w), :]
+    def predict(self, img: np.ndarray) -> Tuple[float, bool]:
+        # if box is not None:
+        #     img = img[box.y: (box.y+box.h), box.x: (box.x+box.w), :]
 
         img = cv2.resize(img, (299, 299))
         img = (img - 128.0) / 128.0
@@ -64,5 +64,5 @@ class TFPresencePredictor(PresencePredictor):
 
         return result[1], result[1] > 0.5
 
-    def close(self):
+    def __del__(self):
         self._sess.close()

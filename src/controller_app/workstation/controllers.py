@@ -3,6 +3,7 @@ from .models import Workstation, worker_location
 from ..factory.models import Factory
 from ..worker.models import Worker
 from ..database import db
+import json
 
 workstation_bp = Blueprint("workstation", __name__)
 
@@ -46,13 +47,21 @@ def add_workstation(factory_id: int):
     return "OK"
 
 
-@workstation_bp.route("/factory/<int:factory_id>/workstation/<int:workstation_id>/worker", methods=["GET"])
-def get_workers_in_station(factory_id: int, workstation_id: int):
-    workstation = Workstation.query.filter_by(factory_id=factory_id, id=workstation_id).first()
-    if workstation is None:
-        abort(404, "factory or workstation not found")
+@workstation_bp.route("/workstation/<int:workstation_id>/worker", methods=["GET"])
+def get_workers_in_station(workstation_id: int):
+    workstation = Workstation.query.get_or_404(workstation_id)
     workers = workstation.workers
-    return jsonify([worker.dict for worker in workers])
+
+    result = list()
+    for worker in workers:
+        d = {"eid": worker.eid,
+             "name": worker.name}
+        face = worker.faces[0]
+        encoding = json.loads(face.encoding)
+        d.update({"faceEncoding": encoding})
+        result.append(d)
+
+    return jsonify(result)
 
 
 @workstation_bp.route("/factory/<int:factory_id>/workstation/<int:workstation_id>/worker", methods=["POST"])

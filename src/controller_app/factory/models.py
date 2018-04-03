@@ -9,7 +9,7 @@ class Factory(db.Model):
 
     workers = db.relationship("Worker", backref="factory", lazy=True)
     workstations = db.relationship("Workstation", backref="factory", lazy=True)
-    equipment_model = db.relationship("EquipmentModel", backref="factory", uselist=False, lazy=True)
+    # equipment_model = db.relationship("EquipmentModel", backref="factory", uselist=False, lazy=True)
     # equipment_cameras = db.relationship("EquipmentCamera", backref="factory", lazy=True)
     # equipment_active_cameras = db.relationship("EquipmentActiveCamera", backref="factory", lazy=True)
     equipments = db.relationship("Equipment", backref="factory", lazy=True)

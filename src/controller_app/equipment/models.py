@@ -10,6 +10,7 @@ class Equipment(db.Model):
 
     equipment_camera = db.relationship("EquipmentCamera", backref="equipment", uselist=False, lazy=True)
     equipment_active_camera = db.relationship("EquipmentActiveCamera", backref="equipment", uselist=False, lazy=True)
+    equipment_model = db.relationship("EquipmentModel", backref="factory", uselist=False, lazy=True)
 
     @property
     def dict(self):

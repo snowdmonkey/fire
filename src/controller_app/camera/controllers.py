@@ -1,4 +1,4 @@
-from flask import Blueprint, request, abort
+from flask import Blueprint, request, abort, jsonify
 
 from .models import EquipmentActiveCamera, EquipmentCamera, WorkstationCamera
 from ..database import db
@@ -126,4 +126,13 @@ def set_keyperson_camera(workstation_id: int):
     db.session.commit()
     return "OK"
 
+
+@camera_bp.route("/camera/keyperson_camera/workstation/<int:workstation_id>", methods=["GET"])
+def get_keyperson_camera(workstation_id: int):
+    workstation = Workstation.query.get_or_404(workstation_id)
+    camera = workstation.camera
+    if camera is None:
+        abort(404, "no keyperson camera for this workstation")
+    else:
+        return jsonify(camera.dict)
 

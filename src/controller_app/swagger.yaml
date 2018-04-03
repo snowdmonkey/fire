@@ -223,7 +223,7 @@ paths:
           schema:
             $ref: "#/definitions/WorkerStation"
 
-  /factory/{factory_id}/workstation/{workstation_id}/worker:
+  /workstation/{workstation_id}/worker:
     get:
       tags:
         - workstation
@@ -231,22 +231,32 @@ paths:
       produces:
         - application/json
       parameters:
-        - name: factory_id
+        - name: workstation_id
           type: integer
           required: true
           in: path
-        - name: workerstation_id
-          type: integer
-          required: true
       responses:
         200:
           description: OK
           schema:
             type: array
             items:
-              $ref: "#/definitions/Worker"
+              type: object
+              properties:
+                eid:
+                  type: string
+                name:
+                  type: string
+                faceEncoding:
+                  type: array
+                  items:
+                    type: number
+                  maxLength: 128
+                  minLength: 128
         404:
           description: factory or workstation not found
+
+  /factory/{factory_id}/workstation/{workstation_id}/worker:
     post:
       tags:
         - workstation
@@ -438,6 +448,23 @@ paths:
       responses:
         200:
           description: OK
+    get:
+      tags:
+        - camera
+      summary: get keyperson camera
+      description: get the keyperson camera for a workstation
+      parameters:
+        - name: workstationId
+          type: integer
+          required: true
+          in: path
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/WorkstationCamera"
+        404:
+          description: no such camera
 
 
   /factory/{factory_id}/equipment:
@@ -679,9 +706,6 @@ paths:
           type: file
           in: formData
           description: model file to upload
-        - name: mapping
-          in: formData
-          type: string
       consumes:
         - multipart/form-data
       produces:
