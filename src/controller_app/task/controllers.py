@@ -2,7 +2,7 @@ import json
 import logging
 from datetime import datetime
 
-from dateutil.tz import tzlocal
+# from dateutil.tz import tzlocal
 from flask import Blueprint, jsonify, abort, current_app, request
 # import paho.mqtt.client as mqtt
 from kafka import KafkaProducer
@@ -36,7 +36,7 @@ def add_equipment_task(equipment_id: int):
     # payload = json.dumps(payload)
 
     task = Task(type=TaskType.equipment,
-                create_time=datetime.now(tz=tzlocal()),
+                create_time=datetime.now(),
                 context=json.dumps(payload),
                 deadline=deadline,
                 status=TaskStatus.created)
@@ -81,7 +81,7 @@ def add_equipment_active_task(equipment_id: int):
                "deadline": deadline.strftime(format="%Y-%m-%dT%H:%M:%S")}
 
     task = Task(type=TaskType.equipment_active,
-                create_time=datetime.now(tz=tzlocal()),
+                create_time=datetime.now(),
                 context=json.dumps(payload),
                 deadline=deadline,
                 status=TaskStatus.created)
@@ -135,7 +135,7 @@ def add_keyperson_task(workstation_id: int):
     }
 
     task = Task(type=TaskType.keyperson,
-                create_time=datetime.now(tz=tzlocal()),
+                create_time=datetime.now(),
                 context=json.dumps(payload),
                 deadline=deadline,
                 status=TaskStatus.created)

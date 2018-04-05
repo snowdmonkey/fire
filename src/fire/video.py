@@ -8,6 +8,9 @@ import threading
 class ReadFrameError(Exception):
     pass
 
+class VideoStreamClosed(Exception):
+    pass
+
 
 class VideoStream:
 

@@ -318,15 +318,22 @@ def main():
             # try to decode task payload
             payload = json.loads(str(msg.value))
             task_id = payload.get("taskId")
+            deadline = datetime.strptime(payload.get("deadline"), "%Y-%m-%dT%H:%M:%S")
             if task_id is None:
                 raise Exception("cannot find task id")
-
         except Exception as e:
             # if decode task payload fails, continue directly
             continue
         else:
             # update task id in output payload
             output_payload.update({"taskId": task_id})
+
+        # check if deadline is passed
+        if datetime.now() > deadline:
+            output_payload.update({"status": "failed"})
+            requests.put("{}/task/{}".format(controller_base_url, task_id),
+                         json={"status": "failed", "result": "task overdue"})
+            continue
 
         try:
             # try to create task from payload
