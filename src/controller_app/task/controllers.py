@@ -33,12 +33,12 @@ def add_equipment_task(equipment_id: int):
     if equipment.equipment_camera is None:
         abort(400, "no camera is registered for this equipment for checking existence")
     payload = {"equipmentId": equipment_id, "deadline": deadline.strftime(format="%Y-%m-%dT%H:%M:%S")}
-    payload = json.dumps(payload)
+    # payload = json.dumps(payload)
 
     task = Task(type=TaskType.equipment,
                 create_time=datetime.now(tz=tzlocal()),
-                context=payload,
-                deadline = deadline,
+                context=json.dumps(payload),
+                deadline=deadline,
                 status=TaskStatus.created)
 
     try:
@@ -46,6 +46,9 @@ def add_equipment_task(equipment_id: int):
     except Exception as e:
         logger.exception(e)
         abort(500, "database write error")
+
+    payload.update({"taskId": task.id})
+    payload = json.dumps(payload)
 
     try:
         producer = KafkaProducer(bootstrap_servers=current_app.config.get("KAFKA_SERVER"))
@@ -74,12 +77,12 @@ def add_equipment_active_task(equipment_id: int):
 
     if equipment.equipment_active_camera is None:
         abort(400, "no camera is registered for this equipment for checking existence")
-    payload = {"equipmentId": equipment_id, "deadline": deadline.strftime(format="%Y-%m-%dT%H:%M:%S")}
-    payload = json.dumps(payload)
+    payload = {"equipmentId": equipment_id,
+               "deadline": deadline.strftime(format="%Y-%m-%dT%H:%M:%S")}
 
     task = Task(type=TaskType.equipment_active,
                 create_time=datetime.now(tz=tzlocal()),
-                context=payload,
+                context=json.dumps(payload),
                 deadline=deadline,
                 status=TaskStatus.created)
 
@@ -88,6 +91,9 @@ def add_equipment_active_task(equipment_id: int):
     except Exception as e:
         logger.exception(e)
         abort(500, "database write error")
+
+    payload.update({"taskId": task.id})
+    payload = json.dumps(payload)
 
     try:
         producer = KafkaProducer(bootstrap_servers=current_app.config.get("KAFKA_SERVER"))
@@ -121,16 +127,16 @@ def add_keyperson_task(workstation_id: int):
 
     if workstation.camera is None:
         abort(400, "no camera is registered for this workstation for checking existence")
+
     payload = {
         "workstationId": workstation_id,
         "deadline": deadline.strftime(format="%Y-%m-%dT%H:%M:%S"),
         "duration": duration
     }
-    payload = json.dumps(payload)
 
     task = Task(type=TaskType.keyperson,
                 create_time=datetime.now(tz=tzlocal()),
-                context=payload,
+                context=json.dumps(payload),
                 deadline=deadline,
                 status=TaskStatus.created)
 
@@ -139,6 +145,9 @@ def add_keyperson_task(workstation_id: int):
     except Exception as e:
         logger.exception(e)
         abort(500, "database write error")
+
+    payload.update({"taskId": task.id})
+    payload = json.dumps(payload)
 
     try:
         producer = KafkaProducer(bootstrap_servers=current_app.config.get("KAFKA_SERVER"))
@@ -157,3 +166,25 @@ def add_keyperson_task(workstation_id: int):
 def get_task(task_id: int):
     task = Task.query.get_or_404(task_id)
     return jsonify(task.dict)
+
+
+@task_bp.route("/task/<int:task_id>", methods=["PUT"])
+def set_task(task_id: int):
+    body = request.get_json()
+
+    task = Task.query.get_or_404(task_id)
+
+    if "startTime" in body:
+        task.start_time = datetime.strptime(body.get("startTime"), "%Y-%m-%dT%H:%M:%S")
+
+    if "endTime" in body:
+        task.end_time = datetime.strptime(body.get("endTime"), "%Y-%m-%dT%H:%M:%S")
+
+    if "status" in body:
+        task.status = body.get("status")
+
+    if "result" in body:
+        task.result = body.get("result")
+
+    db.session.commit()
+    return "OK"

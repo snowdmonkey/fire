@@ -2,7 +2,7 @@ import tensorflow as tf
 import numpy as np
 import cv2
 from abc import ABC, abstractmethod
-from typing import Tuple, Optional
+from typing import Tuple, Optional, BinaryIO
 from pathlib import Path
 from ..misc import Box
 
@@ -22,16 +22,16 @@ class PresencePredictor(ABC):
 
 class TFPresencePredictor(PresencePredictor):
 
-    def __init__(self, graph_path: Path):
+    def __init__(self, graph_io: BinaryIO):
         """
         constructor
         """
         super().__init__()
-        self._graph = self._load_graph(graph_path)
+        self._graph = self._load_graph(graph_io)
         self._sess = tf.Session(graph=self._graph)
 
     @staticmethod
-    def _load_graph(graph_path: Path) -> tf.Graph:
+    def _load_graph(graph_io: BinaryIO) -> tf.Graph:
         """
         load tf.Graph from a path
         :param graph_path: path the graph file
@@ -40,8 +40,9 @@ class TFPresencePredictor(PresencePredictor):
         graph = tf.Graph()
         graph_def = tf.GraphDef()
 
-        with graph_path.open(mode="rb") as f:
-            graph_def.ParseFromString(f.read())
+        # with graph_path.open(mode="rb") as f:
+        #     graph_def.ParseFromString(f.read())
+        graph_def.ParseFromString(graph_io.read())
         with graph.as_default():
             tf.import_graph_def(graph_def)
         return graph

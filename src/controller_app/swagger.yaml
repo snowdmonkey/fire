@@ -388,6 +388,22 @@ paths:
       responses:
         200:
           description: OK
+    get:
+      tags:
+        - camera
+      summary: get a camera
+      parameters:
+        - name: equipmentId
+          type: integer
+          required: true
+          in: path
+      produces:
+        - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/EquipmentCamera"
 
   /camera/equipment_active_camera/equipment/{equipmentId}:
     put:
@@ -658,14 +674,51 @@ paths:
           description: OK
           schema:
             $ref: "#/definitions/Task"
+    put:
+      tags:
+        - task
+      summary: set a task status
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              startTime:
+                type: string
+                format: 'date-time'
+                example: 2018-03-30T12:20:21
+              endTime:
+                type: string
+                format: 'date-time'
+                example: 2018-03-30T12:20:21
+              status:
+                type: string
+                enum:
+                  - created
+                  - ongoing
+                  - success
+                  - failed
+              result:
+                type: string
+        - name: taskId
+          type: integer
+          required: true
+          in: path
+      produces:
+        - text/html
+      responses:
+        200:
+          description: OK
 
-  /factory/{factoryId}/equipment_model/pb:
+  /equipment/{equipmentId}/equipment_model/pb:
     get:
       tags:
         - equipment model
       summary: get model file
       parameters:
-        - name: factoryId
+        - name: equipmentId
           type: integer
           required: true
           in: path
@@ -675,30 +728,30 @@ paths:
         200:
           description: OK
 
-  /factory/{factoryId}/equipment_model:
-    get:
-      tags:
-        - equipment model
-      summary: get model description
-      parameters:
-        - name: factoryId
-          type: integer
-          required: true
-          in: path
-      produces:
-        - applicaiton/json
-      responses:
-        200:
-          description: OK
-          schema:
-            $ref: "#/definitions/EquipmentModel"
+  /equipment/{equipmentId}/equipment_model:
+#    get:
+#      tags:
+#        - equipment model
+#      summary: get model description
+#      parameters:
+#        - name: factoryId
+#          type: integer
+#          required: true
+#          in: path
+#      produces:
+#        - applicaiton/json
+#      responses:
+#        200:
+#          description: OK
+#          schema:
+#            $ref: "#/definitions/EquipmentModel"
     put:
       tags:
         - equipment model
       summary: set model
-      description: set ML model for a factory to check the existence of the machines
+      description: set ML model for an equipment
       parameters:
-        - name: factoryId
+        - name: equipmentId
           type: integer
           required: true
           in: path
@@ -770,7 +823,7 @@ definitions:
     type: object
     properties:
       id:
-        type: integer
+        type: string
       uri:
         type: string
       xmin:
@@ -788,7 +841,7 @@ definitions:
     type: object
     properties:
       id:
-        type: integer
+        type: string
       uri:
         type: string
       xmin:
@@ -806,7 +859,7 @@ definitions:
     type: object
     properties:
       id:
-        type: integer
+        type: string
       uri:
         type: string
       workstationId:

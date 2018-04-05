@@ -2,6 +2,7 @@ from .misc import Box
 from typing import Optional
 import cv2
 import numpy as np
+import threading
 
 
 class ReadFrameError(Exception):
@@ -10,15 +11,43 @@ class ReadFrameError(Exception):
 
 class VideoStream:
 
-    def __init__(self, url: str, roi: Optional[Box] = None):
+    def __init__(self, url: str, device_id: str, roi: Optional[Box] = None):
         """
         constructor
 
         :param url: url for the video stream
+        :param device_id: str
         :param roi: region of interests in the video frames
         """
         self._video_url = url
         self._roi = roi
+        self._device_id = device_id
+        self._current_frame = None
+        self._running = False
+        self._thread = threading.Thread(target=self._update_current_frame)
+
+    @property
+    def device_id(self):
+        return self._device_id
+
+    def _update_current_frame(self):
+        cap = cv2.VideoCapture(self._video_url)
+        while self._running is True:
+            ret, frame = cap.read()
+            if ret is False:
+                cap.release()
+                cap = cv2.VideoCapture(self._video_url)
+                continue
+            else:
+                self._current_frame = frame
+        cap.release()
+
+    def start(self):
+        self._running = True
+        self._thread.start()
+
+    def close(self):
+        self._running = False
 
     def read_current_frame(self) -> np.ndarray:
         """
@@ -26,14 +55,10 @@ class VideoStream:
 
         :return: ndarray as the current frame
         """
-        cap = cv2.VideoCapture(self._video_url)
-        ret, frame = cap.read()
-        cap.release()
-        if ret is False:
-            raise ReadFrameError("fail to read a frame from video source")
-        return frame
 
-    def read_current_roi(self) -> np.ndarray:
+        return self._current_frame
+
+    def read_current_roi(self) -> Optional[np.ndarray]:
         """
         read current region of interests
 
@@ -42,6 +67,11 @@ class VideoStream:
         if self._roi is None:
             raise ValueError("current roi is not set")
         current_frame = self.read_current_frame()
+        if current_frame is None:
+            return None
         box = self._roi
         current_roi = current_frame[box.y: (box.y+box.h), box.x: (box.x+box.w), :]
         return current_roi
+
+    def __del__(self):
+        self.close()

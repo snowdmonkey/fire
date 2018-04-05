@@ -21,7 +21,7 @@ class EquipmentCamera(db.Model):
             "xmax": self.xmax,
             "ymin": self.ymin,
             "ymax": self.ymax,
-            "equipmentId": self.factory_id
+            "equipmentId": self.equipment_id
         }
 
 
@@ -45,7 +45,7 @@ class EquipmentActiveCamera(db.Model):
             "xmax": self.xmax,
             "ymin": self.ymin,
             "ymax": self.ymax,
-            "equipmentId": self.factory_id
+            "equipmentId": self.equipment_id
         }
 
 

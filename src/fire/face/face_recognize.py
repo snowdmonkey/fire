@@ -64,6 +64,8 @@ class SimpleFaceRecognizer(FaceRecognizer):
         scores = list()  # type: List[float]
         ids = list()  # type: List[int]
 
+        height, width, _ = img.shape
+
         # face_locations = face_recognition.face_locations(img, equipment_model="cnn")
         face_locations = face_recognition.face_locations(img)
         self._logger.debug("found {} faces".format(len(face_locations)))
@@ -76,8 +78,8 @@ class SimpleFaceRecognizer(FaceRecognizer):
             scores.append(1.0 - distance[min_index])
 
         for face_location in face_locations:
-            box = Box(face_location[3], face_location[0],
-                      face_location[1]-face_location[3], face_location[2]-face_location[0])
+            box = Box(xmin=face_location[3]/width, xmax=face_location[1]/width,
+                      ymin=face_location[0]/height, ymax=face_location[2]/height)
             boxes.append(box)
 
         return ids, boxes, scores

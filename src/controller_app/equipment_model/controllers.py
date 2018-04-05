@@ -11,25 +11,25 @@ import hashlib
 model_bp = Blueprint("equipment_model", __name__)
 
 
-@model_bp.route("/factory/<int:factory_id>/equipment_model/pb", methods=["GET"])
-def get_model_pb(factory_id: int):
-    factory = Factory.query.get_or_404(factory_id)
-    model = factory.equipment_model
+@model_bp.route("/equipment/<int:equipment_id>/equipment_model/pb", methods=["GET"])
+def get_model_pb(equipment_id: int):
+    equipment = Equipment.query.get_or_404(equipment_id)
+    model = equipment.equipment_model
     if model is None:
         abort(404, "model is not set")
     return send_file(io.BytesIO(model.pb),
                      mimetype="application/octet-stream",
                      as_attachment=True,
-                     attachment_filename="factory-{}.pb".format(factory_id))
+                     attachment_filename="equipment-{}.pb".format(equipment_id))
 
 
-@model_bp.route("/factory/<int:factory_id>/equipment_model", methods=["GET"])
-def get_model_mapping(factory_id: int):
-    factory = Factory.query.get_or_404(factory_id)
-    model = factory.equipment_model
-    if model is None:
-        abort(404, "model is not set")
-    return jsonify(model.dict)
+# @model_bp.route("/factory/<int:factory_id>/equipment_model", methods=["GET"])
+# def get_model_mapping(factory_id: int):
+#     factory = Factory.query.get_or_404(factory_id)
+#     model = factory.equipment_model
+#     if model is None:
+#         abort(404, "model is not set")
+#     return jsonify(model.dict)
 
 
 @model_bp.route("/equipment/<int:equipment_id>/equipment_model", methods=["PUT"])

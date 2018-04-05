@@ -1,3 +1,3 @@
 from typing import NamedTuple
 
-Box = NamedTuple("Box", [("x", int), ("y", int), ("w", int), ("h", int)])
+Box = NamedTuple("Box", [("xmin", float), ("xmax", float), ("ymin", float), ("ymax", float)])

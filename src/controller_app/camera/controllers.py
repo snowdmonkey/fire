@@ -136,3 +136,12 @@ def get_keyperson_camera(workstation_id: int):
     else:
         return jsonify(camera.dict)
 
+
+@camera_bp.route("/camera/equipment_camera/equipment/<int:equipment_id>", methods=["GET"])
+def get_equipment_camera(equipment_id: int):
+    equipment = Equipment.query.get_or_404(equipment_id)
+    camera = equipment.equipment_camera
+    if camera is None:
+        abort(404, "no equipment camera set for this equipment")
+    else:
+        return jsonify(camera.dict)

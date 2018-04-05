@@ -43,3 +43,8 @@ class Task(db.Model):
         if self.end_time is not None:
             result.update({"endTime": datetime.strftime(self.end_time, "%Y-%m-%dT%H:%M:%S")})
         return result
+
+
+# class KeypersonTaskPayload:
+#
+#     def __init__(self, workstation_id: int, camera_id: str, deadline: datetime):
