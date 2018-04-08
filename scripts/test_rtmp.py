@@ -5,7 +5,7 @@ from pathlib import Path
 from fire.face.face_recognize import SimpleFaceRecognizer
 from fire.video import VideoStream
 
-video_url = r"rtmp://119.23.207.98:1934/stream/live?token=dXJsOk1TQ1A6Ly9LX1Rlc3RlcigyNDkpL3N0cmVhbT9zdWJ0eXBlPVByaXZhdGVfaG9uZXk="
+video_url = r"rtmp://119.23.207.98:1934/stream/live?token=dXJsOk1TQ1A6Ly9LX1Rlc3RlcigyNDIpL3N0cmVhbT9zdWJ0eXBlPVByaXZhdGVfaG9uZXk="
 
 
 cap = cv2.VideoCapture(video_url)

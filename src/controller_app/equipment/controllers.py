@@ -46,7 +46,7 @@ def add_equipment_to_workstation(factory_id: int, workstation_id: int):
     equipment = Equipment.query.get(equipment_id)
 
     if equipment is None:
-        equipment = Equipment(equipment_id)
+        equipment = Equipment(id=equipment_id)
         try:
             factory.equipments.append(equipment)
             workstation.equipments.append(equipment)

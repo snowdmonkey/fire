@@ -195,6 +195,7 @@ class EquipmentTask(Task):
         """
 
         self._video.start()
+        time.sleep(3)  # wait 3 seconds to skip the incomplete frames
 
         attempts = 0
         while True:
