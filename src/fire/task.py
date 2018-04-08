@@ -2,6 +2,8 @@ import argparse
 import json
 import cv2
 import base64
+import logging
+import time
 from datetime import datetime
 from typing import List, Union, Dict
 
@@ -13,6 +15,8 @@ from .equipment.presence_predict import PresencePredictor, TFPresencePredictor
 from .face.face_recognize import SimpleFaceRecognizer, FaceRecognizer
 from .misc import Box
 from .video import VideoStream
+
+logger = logging.getLogger(__name__)
 
 
 class Result(ABC):
@@ -142,16 +146,6 @@ class KeyPersonTask(Task):
 
         while True:
 
-            frame = self._video.read_current_frame()
-            if frame is None:
-                continue
-
-            ids, _, scores = self._recognizer.recognize(frame)
-            for id, score in zip(ids, scores):
-                if result[id].confidence < score:
-                    result[id].confidence = score
-                    result[id].prof = frame
-
             # stop the loop if all key persons are captured
             if all([x.confidence > 0.5 for x in result]):
                 break
@@ -160,6 +154,17 @@ class KeyPersonTask(Task):
             current_time = datetime.now()
             if (current_time - self._start_time).seconds > self._duration:
                 break
+
+            frame = self._video.read_current_frame()
+            if frame is None:
+                time.sleep(1)
+                continue
+
+            ids, _, scores = self._recognizer.recognize(frame)
+            for id, score in zip(ids, scores):
+                if result[id].confidence < score:
+                    result[id].confidence = score
+                    result[id].prof = frame
 
         self._video.close()
 
@@ -180,7 +185,7 @@ class EquipmentTask(Task):
         self._predictor = presence_predictor
         # self._start_time = datetime.now()
 
-    def run(self, max_attempts: int) -> EquipmentResult:
+    def run(self) -> EquipmentResult:
         """
         run the task
 
@@ -193,7 +198,7 @@ class EquipmentTask(Task):
 
         attempts = 0
         while True:
-            if attempts > max_attempts:
+            if attempts > 10:
                 raise Exception("fail to read a frame")
 
             frame = self._video.read_current_roi()
@@ -202,6 +207,8 @@ class EquipmentTask(Task):
                 break
             else:
                 attempts += 1
+                time.sleep(1)
+                continue
         confidence, conclusion = self._predictor.predict(frame)
         return EquipmentResult(confidence=confidence, prof=frame, device_id=self._video.device_id)
 
@@ -307,22 +314,25 @@ def main():
     task_factory = TaskFactory(controller_base_url=args.controller_base_url)
 
     while True:
-        consumer = KafkaConsumer("equipment", "keyperson", bootstap_servers=args.kafka, group_id="3cf")
+        consumer = KafkaConsumer("equipment", "keyperson", bootstrap_servers=args.kafka, group_id="3cf")
         msg = next(consumer)
         consumer.commit()
         consumer.close()
+
+        logger.info("revieced task topic: {}; value: {}".format(msg.topic, msg.value.decode()))
 
         output_payload = dict()
 
         try:
             # try to decode task payload
-            payload = json.loads(str(msg.value))
+            payload = json.loads(msg.value.decode())
             task_id = payload.get("taskId")
             deadline = datetime.strptime(payload.get("deadline"), "%Y-%m-%dT%H:%M:%S")
             if task_id is None:
                 raise Exception("cannot find task id")
         except Exception as e:
             # if decode task payload fails, continue directly
+            logger.exception(e)
             continue
         else:
             # update task id in output payload
@@ -330,6 +340,7 @@ def main():
 
         # check if deadline is passed
         if datetime.now() > deadline:
+            logger.info("task overdue")
             output_payload.update({"status": "failed"})
             requests.put("{}/task/{}".format(controller_base_url, task_id),
                          json={"status": "failed", "result": "task overdue"})
@@ -337,26 +348,30 @@ def main():
 
         try:
             # try to create task from payload
-            task = task_factory.create_task(topic=msg.topic, payload=str(msg.value))
+            task = task_factory.create_task(topic=msg.topic, payload=msg.value.decode())
         except Exception as e:
             # if create task fails, set task status to fail
+            logger.info("fail to create task {}".format(payload.get("taskId")))
             requests.put("{}/task/{}".format(controller_base_url, task_id),
                          json={"status": "failed", "result": "create task failed" + str(e)})
             continue
         else:
             #  if task is successfully created, update task status to ongoing and update output payload
+            logger.info("successfully create task {}".format(output_payload.get("taskId")))
             requests.put("{}/task/{}".format(controller_base_url, task_id),
                          json={"status": "ongoing", "startTime": task.start_time.strftime("%Y-%m-%dT%H:%M:%S")})
-            output_payload.update({"time": task.start_time.strftime("%Y-%m-%d %H:%M:%S")})
+            output_payload.update({"time": task.start_time.strftime("%Y-%m-%d %H:%M:%S"),
+                                   "deviceId": task.camera_id})
 
         if msg.topic == "equipment":
             try:
                 #  try to run a equipment task
-                result = task.run(max_attempts=10)  # type: EquipmentResult
+                result = task.run()  # type: EquipmentResult
 
             except Exception as e:
 
                 # if task fails, update task status to failed and update output payload
+                logger.error("task {} fails".format(output_payload.get("taskId")))
                 output_payload.update({"success": False})
                 requests.put("{}/task/{}".format(controller_base_url, task_id),
                              json={"status": "failed", "result": "execute task failed" + str(e)})
@@ -368,6 +383,7 @@ def main():
                                  "status": "success",
                                  "endTime": datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
                                  "result": json.dumps(output_payload)})
+                logger.info("task {} succeed".format(output_payload.get("taskId")))
         elif msg.topic == "keyperson":
             try:
                 #  try to run a equipment task
@@ -376,9 +392,11 @@ def main():
             except Exception as e:
 
                 # if task fails, update task status to failed and update output payload
+                logger.error("task {} fails".format(output_payload.get("taskId")))
                 output_payload.update({"success": False})
                 requests.put("{}/task/{}".format(controller_base_url, task_id),
                              json={"status": "failed", "result": "execute task failed" + str(e)})
+                logger.error("task {} fails".format(output_payload.get("taskId")))
             else:
                 # if task succeed, update task status to success, task end time and encode result
                 output_payload.update({"data": [x.to_dict() for x in result]})
@@ -387,7 +405,11 @@ def main():
                                  "status": "success",
                                  "endTime": datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
                                  "result": json.dumps(output_payload)})
+                logger.info("task {} succeed".format(output_payload.get("taskId")))
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                        handlers=[logging.StreamHandler()])
+    logging.getLogger("kafka").setLevel(logging.ERROR)
     main()

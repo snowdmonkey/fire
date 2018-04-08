@@ -8,6 +8,7 @@ import threading
 class ReadFrameError(Exception):
     pass
 
+
 class VideoStreamClosed(Exception):
     pass
 
@@ -28,31 +29,41 @@ class VideoStream:
         self._current_frame = None
         self._running = False
         self._thread = threading.Thread(target=self._update_current_frame)
+        self._cap = None
 
     @property
     def device_id(self):
         return self._device_id
 
     def _update_current_frame(self):
-        cap = cv2.VideoCapture(self._video_url)
+        # cap = cv2.VideoCapture(self._video_url)
+        # if cap.isOpen() is False:
+        #
+
         while self._running is True:
-            ret, frame = cap.read()
-            if ret is False:
-                cap.release()
-                cap = cv2.VideoCapture(self._video_url)
-                continue
-            else:
-                self._current_frame = frame
-        cap.release()
+            if self._cap.isOpened() is False:
+                raise VideoStreamClosed()
+
+            ret, frame = self._cap.read()
+            self._current_frame = frame
+
+        self._cap.release()
 
     def start(self):
         self._running = True
+        cap = cv2.VideoCapture(self._video_url)
+        if cap.isOpened() is False:
+            raise VideoStreamClosed()
+        else:
+            _, self._current_frame = cap.read()
+            self._cap = cap
+
         self._thread.start()
 
     def close(self):
         self._running = False
 
-    def read_current_frame(self) -> np.ndarray:
+    def read_current_frame(self) -> Optional[np.ndarray]:
         """
         read current frame from camera
 

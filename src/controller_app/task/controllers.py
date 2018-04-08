@@ -43,6 +43,7 @@ def add_equipment_task(equipment_id: int):
 
     try:
         db.session.add(task)
+        db.session.flush()
     except Exception as e:
         logger.exception(e)
         abort(500, "database write error")
@@ -88,6 +89,7 @@ def add_equipment_active_task(equipment_id: int):
 
     try:
         db.session.add(task)
+        db.session.flush()
     except Exception as e:
         logger.exception(e)
         abort(500, "database write error")
@@ -142,6 +144,7 @@ def add_keyperson_task(workstation_id: int):
 
     try:
         db.session.add(task)
+        db.session.flush()
     except Exception as e:
         logger.exception(e)
         abort(500, "database write error")
