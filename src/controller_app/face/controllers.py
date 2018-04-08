@@ -50,6 +50,8 @@ def add_face_to_worker(factory_id: int, eid: str):
         else:
             if len(encodings) > 1:
                 abort(400, "more than more faces detected")
+            elif len(encodings) == 0:
+                abort(400, "no face detected")
             else:
                 encoding = encodings[0]
                 encoding_str = json.dumps(encoding.tolist())
