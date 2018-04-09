@@ -15,11 +15,11 @@ function build_analyst()
     docker build -t fire/analyst -f ../docker/analyst/Dockerfile ..
 }
 
-if ["$1" == "base"]; then
+if [ "$1" == "base" ]; then
     build_base
-elif ["$1" == "analyst"]; then
+elif [ "$1" == "analyst" ]; then
     build_analyst
-elif ["$1" == "controller"]; then
+elif [ "$1" == "controller" ]; then
     build_controller
 else
     echo "Usage: build.sh COMMAND"
