@@ -84,7 +84,9 @@ class VideoStream:
         if current_frame is None:
             return None
         box = self._roi
-        current_roi = current_frame[box.y: (box.y+box.h), box.x: (box.x+box.w), :]
+        height, width, _ = current_frame.shape
+        # current_roi = current_frame[box.y: (box.y+box.h), box.x: (box.x+box.w), :]
+        current_roi = current_frame[int(height*box.ymin): int(height*box.ymax), int(width*box.xmin): int(width*box.xmax), :]
         return current_roi
 
     def __del__(self):

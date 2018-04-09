@@ -36,9 +36,13 @@ class Result(ABC):
     def to_base_dict(self) -> Dict[str, Union[int, float, str, bool]]:
         r = {"confidence": self.confidence}
         if self.prof is not None:
+            img = cv2.resize(self.prof, dsize=None, fx=0.3, fy=0.3)
             _, buffer = cv2.imencode(".jpg", self.prof)
-            img_str = base64.b64encode(buffer)
-            r.update({"prof": img_str})
+            img_bytes = buffer.tobytes()
+            img_base64_bytes = base64.b64encode(img_bytes)
+            img_base64_string=  img_base64_bytes.decode("ascii")
+
+            r.update({"prof": img_base64_string})
         return r
 
     @abstractmethod
@@ -201,8 +205,11 @@ class EquipmentTask(Task):
         while True:
             if attempts > 10:
                 raise Exception("fail to read a frame")
-
-            frame = self._video.read_current_roi()
+            try:
+                frame = self._video.read_current_roi()
+            except Exception as e:
+                self._video.close()
+                raise e
             if frame is not None:
                 self._video.close()
                 break
@@ -210,6 +217,7 @@ class EquipmentTask(Task):
                 attempts += 1
                 time.sleep(1)
                 continue
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         confidence, conclusion = self._predictor.predict(frame)
         return EquipmentResult(confidence=confidence, prof=frame, device_id=self._video.device_id)
 

@@ -69,7 +69,7 @@ class TFPresencePredictor(PresencePredictor):
 
         result = self._sess.run(output_operation.outputs[0], {input_operation.outputs[0]: img})[0]
 
-        return result[1], result[1] > 0.5
+        return float(result[1]), bool(result[1] > 0.5)
 
     def __del__(self):
         self._sess.close()

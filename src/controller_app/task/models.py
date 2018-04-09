@@ -1,6 +1,7 @@
 import enum
 from datetime import datetime
 from ..database import db
+from sqlalchemy.dialects.mysql import MEDIUMTEXT
 
 
 class TaskType(enum.Enum):
@@ -26,7 +27,7 @@ class Task(db.Model):
     end_time = db.Column(db.DATETIME)
     context = db.Column(db.TEXT)
     status = db.Column(db.Enum(TaskStatus), index=True)
-    result = db.Column(db.TEXT)
+    result = db.Column(MEDIUMTEXT)
 
     @property
     def dict(self):
