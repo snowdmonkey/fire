@@ -1,5 +1,6 @@
 import logging
 import random
+import argparse
 from pathlib import Path
 from typing import Tuple, List, IO, Dict
 from tensorflow.python.framework import graph_util
@@ -203,7 +204,7 @@ class TransferTrainer:
             self._logger.info("epoch {}: test  accuracy: {}; test  loss: {}".format(i, round(acc, 5), round(loss, 5)))
             #     self._eval_one_epoch(test_set)
 
-    def export(self, fp: IO[bytes]) -> Dict[int, str]:
+    def export(self, fp: IO[bytes]):
         """
         export the current graph
         :param fp: io to write the equipment_model
@@ -219,14 +220,28 @@ class TransferTrainer:
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
-    trainer = TransferTrainer(5)
-    trainer.train_folder(Path("/home/xuefeng/flower_photos"), batch_size=100, train_proportion=0.8, n_epochs=20)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("path", type=str, help="folder that the images are stored")
+    args = parser.parse_args()
 
-    with open("result.pb", "wb") as f:
-        class_map = trainer.export(f)
+    trainer = TransferTrainer(2)
+    img_path = Path(args.path)
+    pb_path = img_path / "result.pb"
+    class_map_path = img_path / "class_map.json"
 
-    with open("class_map.json", "w") as f:
+    trainer.train_folder(img_path, batch_size=100, train_proportion=0.8, n_epochs=5)
+
+    with pb_path.open("wb") as f:
+        class_map=trainer.export(f)
+
+    with class_map_path.open("w") as f:
         json.dump(class_map, f)
+
+    # with open("result.pb", "wb") as f:
+    #     trainer.export(f)
+
+    # with open("class_map.json", "w") as f:
+    #     json.dump(class_map, f)
 
 
     # train_set, test_set = trainer._create_train_sets(Path("/home/xuefeng/flower_photos"), 0.8)

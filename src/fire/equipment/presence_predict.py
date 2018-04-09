@@ -1,10 +1,10 @@
 import tensorflow as tf
 import numpy as np
 import cv2
+import argparse
 from abc import ABC, abstractmethod
 from typing import Tuple, Optional, BinaryIO
 from pathlib import Path
-from ..misc import Box
 
 
 class PresencePredictor(ABC):
@@ -44,10 +44,16 @@ class TFPresencePredictor(PresencePredictor):
         #     graph_def.ParseFromString(f.read())
         graph_def.ParseFromString(graph_io.read())
         with graph.as_default():
-            tf.import_graph_def(graph_def)
+            tf.import_graph_def(graph_def, name="")
         return graph
 
     def predict(self, img: np.ndarray) -> Tuple[float, bool]:
+        """
+        predict the result
+
+        :param img: img of RGB channels
+        :return:
+        """
         # if box is not None:
         #     img = img[box.y: (box.y+box.h), box.x: (box.x+box.w), :]
 
@@ -55,8 +61,8 @@ class TFPresencePredictor(PresencePredictor):
         img = (img - 128.0) / 128.0
         img = np.resize(img, new_shape=(1,)+img.shape)
 
-        input_name = "import/Mul"
-        output_name = "import/final_result"
+        input_name = "Mul"
+        output_name = "eval/Probs"
 
         input_operation = self._graph.get_operation_by_name(input_name)
         output_operation = self._graph.get_operation_by_name(output_name)
@@ -67,3 +73,21 @@ class TFPresencePredictor(PresencePredictor):
 
     def __del__(self):
         self._sess.close()
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("pb_path", type=str)
+    parser.add_argument("img_path", type=str)
+    args = parser.parse_args()
+
+    with open(args.pb_path, "rb") as f:
+        predictor = TFPresencePredictor(f)
+
+    img = cv2.imread(args.img_path, cv2.IMREAD_COLOR)
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    print(predictor.predict(img))
+
+
+if __name__ == "__main__":
+    main()
