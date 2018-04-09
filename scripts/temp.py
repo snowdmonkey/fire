@@ -1,26 +1,14 @@
 import cv2
-import time
+import requests
+from pathlib import Path
 
+path = Path(r"C:\Users\h232559\Desktop\fire\yanxiang_face")
 
-video_url = r"rtmp://119.23.207.98:1934/stream/live?token=dXJsOk1TQ1A6Ly9LX1Rlc3RlcigyNDIpL3N0cmVhbT9zdWJ0eXBlPVByaXZhdGVfaG9uZXk="
+for img_path in path.glob("*.jpg"):
+    eid = img_path.stem
+    with img_path.open("rb") as f:
 
+        r = requests.post("http://47.92.83.188:5000/factory/100/worker/{}/face".format(eid),
+                          files={"file": f})
+        print("{}: {}".format(eid, r.status_code))
 
-cap = cv2.VideoCapture(video_url)
-
-while True:
-    _, frame = cap.read()
-
-    if frame is None:
-        continue
-
-    frame = cv2.resize(frame, dsize=None, fx=0.5, fy=0.5)
-
-    cv2.imshow("frame", frame)
-
-    if cv2.waitKey(25) & 0xFF == ord('q'):
-        break
-    # time.sleep(2)
-
-cv2.destroyAllWindows()
-
-cap.release()
