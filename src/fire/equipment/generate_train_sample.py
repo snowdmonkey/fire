@@ -50,6 +50,7 @@ def generate_samples(video_path: Path, output_folder: Path, sample_size: int, bo
         if frame_index not in frame_selected_index:
             continue
 
+
         equipment_img_path = equipment_img_folder / "{}.jpg".format(frame_index)
         background_img_path = background_img_folder / "{}.jpg".format(frame_index)
 
@@ -60,6 +61,8 @@ def generate_samples(video_path: Path, output_folder: Path, sample_size: int, bo
         fake_frame = frame.copy()
         fake_frame[box.y:(box.y+box.h), box.x: (box.x+box.w)] = \
             stacked_frame[box.y:(box.y+box.h), (box.x+box.w): (box.x + 2*box.w)]
+
+
 
         # create a background image from the fake image
         height, width, _ = fake_frame.shape
@@ -76,16 +79,16 @@ def main():
     parser = argparse.ArgumentParser(description="generate training samples")
     parser.add_argument("video_path", type=str, help="path of the video file")
     parser.add_argument("output_path", type=str, help="path of the output folder")
-    parser.add_argument("x", type=int, help="x of the bounding box")
-    parser.add_argument("y", type=int, help="y of the bounding box")
-    parser.add_argument("w", type=int, help="w of the bounding box")
-    parser.add_argument("h", type=int, help="h of the bounding box")
+    parser.add_argument("xmin", type=int, help="xmin of the bounding box")
+    parser.add_argument("xmax", type=int, help="xmax of the bounding box")
+    parser.add_argument("ymin", type=int, help="ymin of the bounding box")
+    parser.add_argument("ymax", type=int, help="ymax of the bounding box")
     parser.add_argument("sample_size", type=int, help="number of images to generate")
 
     args = parser.parse_args()
 
     generate_samples(Path(args.video_path), Path(args.output_path), args.sample_size,
-                     Box(args.x, args.y, args.w, args.h))
+                     Box(xmin=args.xmin, xmax=args.xmax, ymin=args.ymin, ymax=args.ymax))
 
 
 if __name__ == "__main__":

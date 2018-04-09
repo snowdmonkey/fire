@@ -38,7 +38,7 @@ class TransferTrainer:
             with open(graph_file_path, "rb") as f:
                 graph_def = tf.GraphDef()
                 graph_def.ParseFromString(f.read())
-            tf.import_graph_def(graph_def)
+            tf.import_graph_def(graph_def, name="")
 
             bottleneck_tensor_name = 'pool_3/_reshape:0'
             bottleneck_tensor_size = 2048
@@ -47,7 +47,7 @@ class TransferTrainer:
             input_depth = 3
             resized_input_tensor_name = 'Mul:0'
 
-            bottleneck_tensor = graph.get_tensor_by_name('import/pool_3/_reshape:0')
+            bottleneck_tensor = graph.get_tensor_by_name('pool_3/_reshape:0')
             # img_input_tensor = graph.get_tensor_by_name("import/Mul:0")
 
             with tf.name_scope("input"):
@@ -150,7 +150,7 @@ class TransferTrainer:
         train_op = self._graph.get_operation_by_name("train/TrainOp")
         # feature_entry = self._graph.get_tensor_by_name("import/Mul:0")
         # label_entry = self._graph.get_operation_by_name("input/GroundTruthInput")
-        bottleneck_tensor = self._graph.get_tensor_by_name('import/pool_3/_reshape:0')
+        bottleneck_tensor = self._graph.get_tensor_by_name('pool_3/_reshape:0')
         acc_list = list()
         cross_entropy_list = list()
         for i in range(len(dataset) // batch_size):
@@ -159,7 +159,7 @@ class TransferTrainer:
             bottlenecks = list()
             for feature in features:
                 feature = np.stack([feature])
-                bottleneck = self._sess.run(bottleneck_tensor, feed_dict={"import/Mul:0": feature})
+                bottleneck = self._sess.run(bottleneck_tensor, feed_dict={"Mul:0": feature})
                 bottleneck = np.squeeze(bottleneck)
                 bottlenecks.append(bottleneck)
             bottlenecks = np.stack(bottlenecks)
