@@ -34,6 +34,9 @@ services:
       - 5000:5000
     command: --db_uri=mysql://root:HON123well@172.26.174.105:3306/fire --kafka=172.26.174.105:9092
     restart: always
+    depends_on:
+      - db
+      - kafka
 
   analyst:
     build:
@@ -42,4 +45,6 @@ services:
     image: fire/analyst
     container_name: fire-analyst
     command: http://172.26.174.105:5000 172.26.174.105:9092
+    depends_on:
+      - controller
 
