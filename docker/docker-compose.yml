@@ -28,7 +28,7 @@ services:
   controller:
     build:
       context: ..
-      dockerfile: ./controller/Dockerfile
+      dockerfile: ./docker/controller/Dockerfile
     image: fire/controller
     container_name: fire-controller
     ports:
@@ -42,7 +42,7 @@ services:
   analyst:
     build:
       context: ..
-      dockerfile: ./analyst/Dockerfile
+      dockerfile: ./docker/analyst/Dockerfile
     image: fire/analyst
     container_name: fire-analyst
     command: http://172.26.174.105:5000 172.26.174.105:9092
