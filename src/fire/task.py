@@ -4,6 +4,7 @@ import cv2
 import base64
 import logging
 import time
+import pika
 from datetime import datetime
 from typing import List, Union, Dict
 
@@ -312,10 +313,39 @@ class TaskFactory:
         return task
 
 
+def publish_mq(body: str, topic: str, rabbit_url: str):
+    try:
+        connection = pika.BlockingConnection(pika.URLParameters(rabbit_url))
+    except Exception as e:
+        logger.error("fail to establish rabbitmq connection")
+        return
+    else:
+        try:
+            channel = connection.channel()
+            if topic == "equipment":
+                channel.queue_declare(queue="alarm.equipment.move")
+                channel.basic_publish(exchange="alarm.equipment.move",
+                                      routing_key="alarm.equipment.move.#",
+                                      body=body)
+                logger.info("rabbitmq publish success")
+            elif topic == "keyperson":
+                channel.queue_declare(queue="alarm.worker.diff")
+                channel.basic_publish(exchange="alarm.worker.diff",
+                                      routing_key="alarm.worker.diff.#",
+                                      body=body)
+                logger.info("rabbitmq publish success")
+
+        except Exception as e:
+            logger.error("fail to publish to rabbitmq")
+        finally:
+            connection.close()
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("controller_base_url", type=str, help="url to the controller app", )
     parser.add_argument("kafka", type=str, help="url to kafka broker")
+    parser.add_argument("rabbit", type=str, help="rabbitmq url parameter")
 
     args = parser.parse_args()
 
@@ -353,6 +383,7 @@ def main():
             output_payload.update({"status": "failed"})
             requests.put("{}/task/{}".format(controller_base_url, task_id),
                          json={"status": "failed", "result": "task overdue"})
+            publish_mq(body=json.dumps(output_payload), topic=msg.topic, rabbit_url=args.rabbit)
             continue
 
         try:
@@ -363,6 +394,7 @@ def main():
             logger.info("fail to create task {}".format(payload.get("taskId")))
             requests.put("{}/task/{}".format(controller_base_url, task_id),
                          json={"status": "failed", "result": "create task failed" + str(e)})
+            publish_mq(body=json.dumps(output_payload), topic=msg.topic, rabbit_url=args.rabbit)
             continue
         else:
             #  if task is successfully created, update task status to ongoing and update output payload
@@ -372,53 +404,82 @@ def main():
             output_payload.update({"time": task.start_time.strftime("%Y-%m-%d %H:%M:%S"),
                                    "deviceId": task.camera_id})
 
-        if msg.topic == "equipment":
-            try:
-                #  try to run a equipment task
-                result = task.run()  # type: EquipmentResult
+        try:
+            #  try to run a equipment task
+            result = task.run()  # type: Union[EquipmentResult, List[FaceRecognitionResult]]
 
-            except Exception as e:
+        except Exception as e:
 
-                # if task fails, update task status to failed and update output payload
-                logger.error("task {} fails".format(output_payload.get("taskId")))
-                output_payload.update({"success": False})
-                requests.put("{}/task/{}".format(controller_base_url, task_id),
-                             json={"status": "failed", "result": "execute task failed" + str(e)})
-            else:
-                # if task succeed, update task status to success, task end time and encode result
+            # if task fails, update task status to failed and update output payload
+            logger.error("task {} fails".format(output_payload.get("taskId")))
+            output_payload.update({"success": False})
+            requests.put("{}/task/{}".format(controller_base_url, task_id),
+                         json={"status": "failed", "result": "execute task failed" + str(e)})
+            publish_mq(body=json.dumps(output_payload), topic=msg.topic, rabbit_url=args.rabbit)
+        else:
+            # if task succeed, update task status to success, task end time and encode result
+            if msg.topic == "equipment":
                 output_payload.update({"data": result.to_dict()})
-                requests.put("{}/task/{}".format(controller_base_url, task_id),
-                             json={
-                                 "status": "success",
-                                 "endTime": datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
-                                 "result": json.dumps(output_payload)})
-                logger.info("task {} succeed".format(output_payload.get("taskId")))
-        elif msg.topic == "keyperson":
-            try:
-                #  try to run a equipment task
-                result = task.run()  # type: List[FaceRecognitionResult]
-
-            except Exception as e:
-
-                # if task fails, update task status to failed and update output payload
-                logger.error("task {} fails".format(output_payload.get("taskId")))
-                output_payload.update({"success": False})
-                requests.put("{}/task/{}".format(controller_base_url, task_id),
-                             json={"status": "failed", "result": "execute task failed" + str(e)})
-                logger.error("task {} fails".format(output_payload.get("taskId")))
-            else:
-                # if task succeed, update task status to success, task end time and encode result
+            elif msg.topic == "keyperson":
                 output_payload.update({"data": [x.to_dict() for x in result]})
-                requests.put("{}/task/{}".format(controller_base_url, task_id),
-                             json={
-                                 "status": "success",
-                                 "endTime": datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
-                                 "result": json.dumps(output_payload)})
-                logger.info("task {} succeed".format(output_payload.get("taskId")))
+
+            requests.put("{}/task/{}".format(controller_base_url, task_id),
+                         json={
+                             "status": "success",
+                             "endTime": datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
+                             "result": json.dumps(output_payload)})
+            publish_mq(body=json.dumps(output_payload), topic=msg.topic, rabbit_url=args.rabbit)
+            logger.info("task {} succeed".format(output_payload.get("taskId")))
+
+
+        # if msg.topic == "equipment":
+        #     try:
+        #         #  try to run a equipment task
+        #         result = task.run()  # type: EquipmentResult
+        #
+        #     except Exception as e:
+        #
+        #         # if task fails, update task status to failed and update output payload
+        #         logger.error("task {} fails".format(output_payload.get("taskId")))
+        #         output_payload.update({"success": False})
+        #         requests.put("{}/task/{}".format(controller_base_url, task_id),
+        #                      json={"status": "failed", "result": "execute task failed" + str(e)})
+        #     else:
+        #         # if task succeed, update task status to success, task end time and encode result
+        #         output_payload.update({"data": result.to_dict()})
+        #         requests.put("{}/task/{}".format(controller_base_url, task_id),
+        #                      json={
+        #                          "status": "success",
+        #                          "endTime": datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
+        #                          "result": json.dumps(output_payload)})
+        #         logger.info("task {} succeed".format(output_payload.get("taskId")))
+        # elif msg.topic == "keyperson":
+        #     try:
+        #         #  try to run a equipment task
+        #         result = task.run()  # type: List[FaceRecognitionResult]
+        #
+        #     except Exception as e:
+        #
+        #         # if task fails, update task status to failed and update output payload
+        #         logger.error("task {} fails".format(output_payload.get("taskId")))
+        #         output_payload.update({"success": False})
+        #         requests.put("{}/task/{}".format(controller_base_url, task_id),
+        #                      json={"status": "failed", "result": "execute task failed" + str(e)})
+        #         logger.error("task {} fails".format(output_payload.get("taskId")))
+        #     else:
+        #         # if task succeed, update task status to success, task end time and encode result
+        #         output_payload.update({"data": [x.to_dict() for x in result]})
+        #         requests.put("{}/task/{}".format(controller_base_url, task_id),
+        #                      json={
+        #                          "status": "success",
+        #                          "endTime": datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
+        #                          "result": json.dumps(output_payload)})
+        #         logger.info("task {} succeed".format(output_payload.get("taskId")))
 
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                         handlers=[logging.StreamHandler()])
+    logging.getLogger("pika").setLevel(logging.ERROR)
     logging.getLogger("kafka").setLevel(logging.ERROR)
     main()

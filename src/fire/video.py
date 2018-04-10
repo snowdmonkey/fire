@@ -3,6 +3,9 @@ from typing import Optional
 import cv2
 import numpy as np
 import threading
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class ReadFrameError(Exception):
@@ -35,6 +38,20 @@ class VideoStream:
     def device_id(self):
         return self._device_id
 
+    def connect(self):
+        logger.info("try to connect to {}".format(self._device_id))
+        self._cap = cv2.VideoCapture(self._video_url)
+        if self._cap.isOpened() is False:
+            raise VideoStreamClosed()
+
+    def disconnect(self):
+        if self._cap is not None:
+            self._cap.release()
+
+    def reconnect(self):
+        self.disconnect()
+        self.connect()
+
     def _update_current_frame(self):
         # cap = cv2.VideoCapture(self._video_url)
         # if cap.isOpen() is False:
@@ -44,19 +61,29 @@ class VideoStream:
             if self._cap.isOpened() is False:
                 raise VideoStreamClosed()
 
-            ret, frame = self._cap.read()
-            self._current_frame = frame
+            for _ in range(10): # try to read frame for 10 times
+                ret, frame = self._cap.read()
+                if ret is True:
+                    break
+
+            if frame is None:  # reconnect if cannot read a frame
+                self.reconnect()
+            else:
+                self._current_frame = frame
 
         self._cap.release()
 
     def start(self):
         self._running = True
-        cap = cv2.VideoCapture(self._video_url)
-        if cap.isOpened() is False:
-            raise VideoStreamClosed()
-        else:
-            _, self._current_frame = cap.read()
-            self._cap = cap
+        # cap = cv2.VideoCapture(self._video_url)
+        self.connect()
+        _, self._current_frame = self._cap.read()
+
+        # if cap.isOpened() is False:
+        #     raise VideoStreamClosed()
+        # else:
+        #     _, self._current_frame = cap.read()
+        #     self._cap = cap
 
         self._thread.start()
 

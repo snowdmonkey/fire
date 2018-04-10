@@ -45,7 +45,7 @@ services:
       dockerfile: ./docker/analyst/Dockerfile
     image: fire/analyst
     container_name: fire-analyst
-    command: http://172.26.174.105:5000 172.26.174.105:9092
+    command: http://172.26.174.105:5000 172.26.174.105:9092 amqp://rqadmin:rqadmin@wxweb1.chinacloudapp.cn:5672
     depends_on:
       - controller
 

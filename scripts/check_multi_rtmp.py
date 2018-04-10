@@ -1,10 +1,11 @@
 import cv2
+import logging
 
-path = r"rtmp://119.23.207.98:1934/stream/live?token=dXJsOk1TQ1A6Ly9LX1Rlc3RlcigyNDIpL3N0cmVhbT9zdWJ0eXBlPVByaXZhdGVfaG9uZXk="
+path = {"wenxiang": r"rtmp://119.23.207.98:1934/stream/live?token=dXJsOk1TQ1A6Ly9LX1Rlc3RlcigyNDkpL3N0cmVhbT9zdWJ0eXBlPVByaXZhdGVfaG9uZXk=",
+        "yanxiang": r"rtmp://119.23.207.98:1934/stream/live?token=dXJsOk1TQ1A6Ly9LX1Rlc3RlcjJfMjQ1L3N0cmVhbT9zdWJ0eXBlPVByaXZhdGVfaG9uZXk="}
 
 # cap = cv2.VideoCapture(path)
-cap = cv2.VideoCapture()
-cap.open(path)
+cap = cv2.VideoCapture(path.get("yanxiang"))
 
 while True:
 
@@ -16,6 +17,7 @@ while True:
     #     continue
 
     if frame is None:
+        print("frame is None")
         continue
 
     frame = cv2.resize(frame, dsize=None, fx=0.5, fy=0.5)
