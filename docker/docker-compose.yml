@@ -23,6 +23,7 @@ services:
     environment:
       - ADVERTISED_HOST=172.26.174.105
       - ADVERTISED_PORT=9092
+    container_name: kafka
 
   controller:
     build:
