@@ -353,7 +353,15 @@ def main():
     task_factory = TaskFactory(controller_base_url=args.controller_base_url)
 
     while True:
-        consumer = KafkaConsumer("equipment", "keyperson", bootstrap_servers=args.kafka, group_id="3cf")
+
+        for _ in range(10):
+            try:
+                consumer = KafkaConsumer("equipment", "keyperson", bootstrap_servers=args.kafka, group_id="3cf")
+            except Exception as e:
+                time.sleep(1)
+            else:
+                break
+
         msg = next(consumer)
         consumer.commit()
         consumer.close()
