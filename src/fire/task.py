@@ -38,7 +38,7 @@ class Result(ABC):
         r = {"confidence": self.confidence}
         if self.prof is not None:
             img = cv2.resize(self.prof, dsize=None, fx=0.3, fy=0.3)
-            _, buffer = cv2.imencode(".jpg", self.prof)
+            _, buffer = cv2.imencode(".jpg", img)
             img_bytes = buffer.tobytes()
             img_base64_bytes = base64.b64encode(img_bytes)
             img_base64_string=  img_base64_bytes.decode("ascii")
