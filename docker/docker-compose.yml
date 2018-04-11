@@ -48,4 +48,7 @@ services:
     command: http://172.26.174.105:5000 172.26.174.105:9092 amqp://rqadmin:rqadmin@wxweb1.chinacloudapp.cn:5672
     depends_on:
       - controller
+    restart: always
+    deploy:
+      replicas: 10
 
