@@ -323,13 +323,13 @@ def publish_mq(body: str, topic: str, rabbit_url: str):
         try:
             channel = connection.channel()
             if topic == "equipment":
-                channel.queue_declare(queue="alarm.equipment.move")
+                # channel.queue_declare(queue="alarm.equipment.move")
                 channel.basic_publish(exchange="alarm.equipment.move",
                                       routing_key="alarm.equipment.move.#",
                                       body=body)
                 logger.info("rabbitmq publish success")
             elif topic == "keyperson":
-                channel.queue_declare(queue="alarm.worker.diff")
+                # channel.queue_declare(queue="alarm.worker.diff")
                 channel.basic_publish(exchange="alarm.worker.diff",
                                       routing_key="alarm.worker.diff.#",
                                       body=body)
