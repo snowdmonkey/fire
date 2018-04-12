@@ -32,9 +32,9 @@ class SimpleFaceRecognizer(FaceRecognizer):
         self._face_ids = list()  # type: List[str]
         # self._face_encodings = list()  # type: List[np.ndarray]
         self._logger = logging.getLogger(self.__class__.__name__)
-        if face_encodings is not True:
+        if face_encodings is not None:
             self._face_encodings = face_encodings
-        elif known_faces_folder is not True:
+        elif known_faces_folder is not None:
             self._load_known_faces(known_faces_folder)
         else:
             raise ValueError("need to provide known face encodings or known face pictures")
