@@ -18,7 +18,7 @@ output_path = r"C:\Users\h232559\Desktop\fire\wenxiang_face_brightness_balance_r
 cap = cv2.VideoCapture(video_path)
 
 fourcc = cv2.VideoWriter_fourcc(*'XVID')
-out = cv2.VideoWriter(output_path, fourcc, 20.0, (640*2, 480))
+out = cv2.VideoWriter(output_path, fourcc, 20.0, (640 * 2, 480))
 
 logger.info("start")
 
@@ -36,13 +36,15 @@ while True:
     ids, boxes, scores = recognizer.recognize(input_frame)
     logger.info("end to process a frame")
     for name, box, score in zip(ids, boxes, scores):
-       frame = cv2.rectangle(frame, (box.x, box.y), (box.x+box.w, box.y+box.h), (0, 0, 255), 1)
-       font = cv2.FONT_HERSHEY_SIMPLEX
-       score = round(score, 3)
-       if score < 0.5:
-           name = "unknown"
-       frame = \
-           cv2.putText(frame, '{}: {}'.format(name, score), (box.x, box.y-2), font, 0.5, (0, 0, 255), 1, cv2.LINE_AA)
+        height, width, _ = frame.shape
+        # frame = cv2.rectangle(frame, (box.x, box.y), (box.x + box.w, box.y + box.h), (0, 0, 255), 1)
+        frame = cv2.rectangle(frame, (int(box.xmin*width), int(box.ymin*height)), (int(box.xmax*width), int(box.ymax*height)), (0, 0, 255), 1)
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        score = round(score, 3)
+        if score < 0.5:
+            name = "unknown"
+        frame = \
+            cv2.putText(frame, '{}: {}'.format(name, score), (int(box.xmin*width), int(box.ymin*height) - 2), font, 0.5, (0, 0, 255), 1, cv2.LINE_AA)
 
     out.write(frame)
     cv2.imshow("frame", frame)

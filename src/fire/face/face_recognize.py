@@ -45,6 +45,7 @@ class SimpleFaceRecognizer(FaceRecognizer):
         :param folder: a folder contain all the known faces
         :return: None
         """
+        self._face_encodings = list()
         for img_path in folder.glob("*.jpg"):
 
             self._logger.debug("loading known face image {}".format(img_path))

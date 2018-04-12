@@ -1,17 +1,18 @@
 import argparse
-import json
-import cv2
 import base64
+import json
 import logging
 import time
-import pika
+from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import List, Union, Dict
 
+import cv2
 import numpy as np
+import pika
 import requests
 from kafka import KafkaConsumer
-from abc import ABC, abstractmethod
+
 from .equipment.presence_predict import PresencePredictor, TFPresencePredictor
 from .face.face_recognize import SimpleFaceRecognizer, FaceRecognizer
 from .misc import Box
@@ -21,7 +22,6 @@ logger = logging.getLogger(__name__)
 
 
 class Result(ABC):
-
     def __init__(self, device_id: str, confidence: float, prof: np.ndarray = None):
         """
         base class for analysis results
@@ -41,7 +41,7 @@ class Result(ABC):
             _, buffer = cv2.imencode(".jpg", img)
             img_bytes = buffer.tobytes()
             img_base64_bytes = base64.b64encode(img_bytes)
-            img_base64_string=  img_base64_bytes.decode("ascii")
+            img_base64_string = img_base64_bytes.decode("ascii")
 
             r.update({"prof": img_base64_string})
         return r
@@ -52,7 +52,6 @@ class Result(ABC):
 
 
 class FaceRecognitionResult(Result):
-
     def __init__(self, eid: str, device_id: str, confidence: float = 0, prof: np.ndarray = None):
         """
         constructor
@@ -90,7 +89,6 @@ class EquipmentResult(Result):
 
 
 class Task(ABC):
-
     def __init__(self, video: VideoStream):
         """
         abstract class for a task
@@ -114,7 +112,6 @@ class Task(ABC):
 
 
 class KeyPersonTask(Task):
-
     def __init__(self, duration: int,
                  eids: List[str],
                  face_recognizer: FaceRecognizer,
@@ -165,11 +162,15 @@ class KeyPersonTask(Task):
                 time.sleep(1)
                 continue
 
-            ids, _, scores = self._recognizer.recognize(frame)
-            for id, score in zip(ids, scores):
+            ids, boxes, scores = self._recognizer.recognize(frame)
+            height, width, _ = frame.shape
+
+            for id, box, score in zip(ids, boxes, scores):
                 if result[id].confidence < score:
                     result[id].confidence = score
-                    result[id].prof = frame
+                    result[id].prof = frame[
+                                      int(box.ymin * height): int(box.ymax * height),
+                                      int(box.xmin * width): int(box.xmax * width), :]
 
         self._video.close()
 
@@ -443,49 +444,49 @@ def main():
             logger.info("task {} succeed".format(output_payload.get("taskId")))
 
 
-        # if msg.topic == "equipment":
-        #     try:
-        #         #  try to run a equipment task
-        #         result = task.run()  # type: EquipmentResult
-        #
-        #     except Exception as e:
-        #
-        #         # if task fails, update task status to failed and update output payload
-        #         logger.error("task {} fails".format(output_payload.get("taskId")))
-        #         output_payload.update({"success": False})
-        #         requests.put("{}/task/{}".format(controller_base_url, task_id),
-        #                      json={"status": "failed", "result": "execute task failed" + str(e)})
-        #     else:
-        #         # if task succeed, update task status to success, task end time and encode result
-        #         output_payload.update({"data": result.to_dict()})
-        #         requests.put("{}/task/{}".format(controller_base_url, task_id),
-        #                      json={
-        #                          "status": "success",
-        #                          "endTime": datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
-        #                          "result": json.dumps(output_payload)})
-        #         logger.info("task {} succeed".format(output_payload.get("taskId")))
-        # elif msg.topic == "keyperson":
-        #     try:
-        #         #  try to run a equipment task
-        #         result = task.run()  # type: List[FaceRecognitionResult]
-        #
-        #     except Exception as e:
-        #
-        #         # if task fails, update task status to failed and update output payload
-        #         logger.error("task {} fails".format(output_payload.get("taskId")))
-        #         output_payload.update({"success": False})
-        #         requests.put("{}/task/{}".format(controller_base_url, task_id),
-        #                      json={"status": "failed", "result": "execute task failed" + str(e)})
-        #         logger.error("task {} fails".format(output_payload.get("taskId")))
-        #     else:
-        #         # if task succeed, update task status to success, task end time and encode result
-        #         output_payload.update({"data": [x.to_dict() for x in result]})
-        #         requests.put("{}/task/{}".format(controller_base_url, task_id),
-        #                      json={
-        #                          "status": "success",
-        #                          "endTime": datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
-        #                          "result": json.dumps(output_payload)})
-        #         logger.info("task {} succeed".format(output_payload.get("taskId")))
+            # if msg.topic == "equipment":
+            #     try:
+            #         #  try to run a equipment task
+            #         result = task.run()  # type: EquipmentResult
+            #
+            #     except Exception as e:
+            #
+            #         # if task fails, update task status to failed and update output payload
+            #         logger.error("task {} fails".format(output_payload.get("taskId")))
+            #         output_payload.update({"success": False})
+            #         requests.put("{}/task/{}".format(controller_base_url, task_id),
+            #                      json={"status": "failed", "result": "execute task failed" + str(e)})
+            #     else:
+            #         # if task succeed, update task status to success, task end time and encode result
+            #         output_payload.update({"data": result.to_dict()})
+            #         requests.put("{}/task/{}".format(controller_base_url, task_id),
+            #                      json={
+            #                          "status": "success",
+            #                          "endTime": datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
+            #                          "result": json.dumps(output_payload)})
+            #         logger.info("task {} succeed".format(output_payload.get("taskId")))
+            # elif msg.topic == "keyperson":
+            #     try:
+            #         #  try to run a equipment task
+            #         result = task.run()  # type: List[FaceRecognitionResult]
+            #
+            #     except Exception as e:
+            #
+            #         # if task fails, update task status to failed and update output payload
+            #         logger.error("task {} fails".format(output_payload.get("taskId")))
+            #         output_payload.update({"success": False})
+            #         requests.put("{}/task/{}".format(controller_base_url, task_id),
+            #                      json={"status": "failed", "result": "execute task failed" + str(e)})
+            #         logger.error("task {} fails".format(output_payload.get("taskId")))
+            #     else:
+            #         # if task succeed, update task status to success, task end time and encode result
+            #         output_payload.update({"data": [x.to_dict() for x in result]})
+            #         requests.put("{}/task/{}".format(controller_base_url, task_id),
+            #                      json={
+            #                          "status": "success",
+            #                          "endTime": datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
+            #                          "result": json.dumps(output_payload)})
+            #         logger.info("task {} succeed".format(output_payload.get("taskId")))
 
 
 if __name__ == "__main__":
