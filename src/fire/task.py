@@ -168,9 +168,12 @@ class KeyPersonTask(Task):
             for id, box, score in zip(ids, boxes, scores):
                 if result[id].confidence < score:
                     result[id].confidence = score
-                    result[id].prof = frame[
-                                      int(box.ymin * height): int(box.ymax * height),
-                                      int(box.xmin * width): int(box.xmax * width), :]
+
+                    if score > 0.5:
+                        result[id].prof = frame
+                    # result[id].prof = frame[
+                    #                   int(box.ymin * height): int(box.ymax * height),
+                    #                   int(box.xmin * width): int(box.xmax * width), :]
 
         self._video.close()
 
