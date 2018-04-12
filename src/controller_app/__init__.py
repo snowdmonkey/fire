@@ -35,6 +35,8 @@ def create_app(db_uri: str,
     app.config["SQLALCHEMY_DATABASE_URI"] = db_uri
     app.config["SQLALCHEMY_COMMIT_ON_TEARDOWN"] = False
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+    app.config['SQLALCHEMY_POOL_RECYCLE'] = 299
+    app.config['SQLALCHEMY_POOL_TIMEOUT'] = 20
     # app.config["MQTT_HOST"] = mqtt_host
     # app.config["MQTT_PORT"] = mqtt_port
     # app.config["MQTT_USER"] = mqtt_user
