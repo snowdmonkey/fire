@@ -354,10 +354,13 @@ def main():
 
     while True:
 
-        for _ in range(10):
+        # try to connect to kafka for 10 times
+        for i in range(10):
             try:
                 consumer = KafkaConsumer("equipment", "keyperson", bootstrap_servers=args.kafka, group_id="3cf")
             except Exception as e:
+                if i == 9:
+                    raise e
                 time.sleep(1)
             else:
                 break
