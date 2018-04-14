@@ -12,8 +12,10 @@ class ReadFrameError(Exception):
     pass
 
 
-class VideoStreamClosed(Exception):
-    pass
+class VideoStreamClosedError(Exception):
+
+    def __init__(self):
+        super().__init__("cannot open the video stream")
 
 
 class VideoStream:
@@ -42,7 +44,7 @@ class VideoStream:
         logger.info("try to connect to {}".format(self._device_id))
         self._cap = cv2.VideoCapture(self._video_url)
         if self._cap.isOpened() is False:
-            raise VideoStreamClosed()
+            raise VideoStreamClosedError()
 
     def disconnect(self):
         if self._cap is not None:
@@ -59,7 +61,7 @@ class VideoStream:
 
         while self._running is True:
             if self._cap.isOpened() is False:
-                raise VideoStreamClosed()
+                raise VideoStreamClosedError()
 
             for _ in range(10): # try to read frame for 10 times
                 ret, frame = self._cap.read()
@@ -80,7 +82,7 @@ class VideoStream:
         _, self._current_frame = self._cap.read()
 
         # if cap.isOpened() is False:
-        #     raise VideoStreamClosed()
+        #     raise VideoStreamClosedError()
         # else:
         #     _, self._current_frame = cap.read()
         #     self._cap = cap
