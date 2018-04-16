@@ -384,6 +384,9 @@ def main():
             deadline = datetime.strptime(payload.get("deadline"), "%Y-%m-%dT%H:%M:%S")
             if task_id is None:
                 raise Exception("cannot find task id")
+        except json.JSONDecodeError:
+            logger.error("fail to decode json message")
+            continue
         except Exception as e:
             # if decode task payload fails, continue directly
             logger.exception(e)
