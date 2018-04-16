@@ -373,7 +373,7 @@ def main():
         consumer.commit()
         consumer.close()
 
-        logger.info("revieced task topic: {}; value: {}".format(msg.topic, msg.value.decode()))
+        logger.info("receive task topic: {}; value: {}".format(msg.topic, msg.value.decode()))
 
         output_payload = dict()
 
