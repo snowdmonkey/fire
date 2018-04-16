@@ -1,9 +1,11 @@
-from .misc import Box
+import logging
+import threading
 from typing import Optional
+
 import cv2
 import numpy as np
-import threading
-import logging
+
+from .misc import Box
 
 logger = logging.getLogger(__name__)
 
@@ -13,13 +15,10 @@ class ReadFrameError(Exception):
 
 
 class VideoStreamClosedError(Exception):
-
-    def __init__(self):
-        super().__init__("cannot open the video stream")
+    pass
 
 
 class VideoStream:
-
     def __init__(self, url: str, device_id: str, roi: Optional[Box] = None):
         """
         constructor
@@ -40,19 +39,19 @@ class VideoStream:
     def device_id(self):
         return self._device_id
 
-    def connect(self):
+    def _connect(self):
         logger.info("try to connect to {}".format(self._device_id))
         self._cap = cv2.VideoCapture(self._video_url)
         if self._cap.isOpened() is False:
-            raise VideoStreamClosedError()
+            raise VideoStreamClosedError("fail to open connection to device {}".format(self._device_id))
 
-    def disconnect(self):
+    def _disconnect(self):
         if self._cap is not None:
             self._cap.release()
 
-    def reconnect(self):
-        self.disconnect()
-        self.connect()
+    def _reconnect(self):
+        self._disconnect()
+        self._connect()
 
     def _update_current_frame(self):
         # cap = cv2.VideoCapture(self._video_url)
@@ -61,15 +60,15 @@ class VideoStream:
 
         while self._running is True:
             if self._cap.isOpened() is False:
-                raise VideoStreamClosedError()
+                raise VideoStreamClosedError("lost connection to device {}".format(self._device_id))
 
-            for _ in range(10): # try to read frame for 10 times
+            for _ in range(10):  # try to read frame for 10 times
                 ret, frame = self._cap.read()
                 if ret is True:
                     break
 
             if frame is None:  # reconnect if cannot read a frame
-                self.reconnect()
+                self._reconnect()
             else:
                 self._current_frame = frame
 
@@ -78,7 +77,7 @@ class VideoStream:
     def start(self):
         self._running = True
         # cap = cv2.VideoCapture(self._video_url)
-        self.connect()
+        self._connect()
         _, self._current_frame = self._cap.read()
 
         # if cap.isOpened() is False:
@@ -115,7 +114,8 @@ class VideoStream:
         box = self._roi
         height, width, _ = current_frame.shape
         # current_roi = current_frame[box.y: (box.y+box.h), box.x: (box.x+box.w), :]
-        current_roi = current_frame[int(height*box.ymin): int(height*box.ymax), int(width*box.xmin): int(width*box.xmax), :]
+        current_roi = current_frame[int(height * box.ymin): int(height * box.ymax),
+                      int(width * box.xmin): int(width * box.xmax), :]
         return current_roi
 
     def __del__(self):
