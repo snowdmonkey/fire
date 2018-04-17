@@ -398,7 +398,7 @@ def main():
         # check if deadline is passed
         if datetime.now() > deadline:
             logger.info("task overdue")
-            output_payload.update({"status": "failed"})
+            output_payload.update({"success": False})
             requests.put("{}/task/{}".format(controller_base_url, task_id),
                          json={"status": "failed", "result": "task overdue"})
             publish_mq(body=json.dumps(output_payload), topic=msg.topic, rabbit_url=args.rabbit)
@@ -412,6 +412,7 @@ def main():
             logger.info("fail to create task {}".format(payload.get("taskId")))
             requests.put("{}/task/{}".format(controller_base_url, task_id),
                          json={"status": "failed", "result": "create task failed" + str(e)})
+            output_payload.update({"success": False})
             publish_mq(body=json.dumps(output_payload), topic=msg.topic, rabbit_url=args.rabbit)
             continue
         else:
@@ -446,6 +447,8 @@ def main():
                              "status": "success",
                              "endTime": datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
                              "result": json.dumps(output_payload)})
+
+            output_payload.update({"success": True})
             publish_mq(body=json.dumps(output_payload), topic=msg.topic, rabbit_url=args.rabbit)
             logger.info("task {} succeed".format(output_payload.get("taskId")))
 
