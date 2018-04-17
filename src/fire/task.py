@@ -410,9 +410,9 @@ def main():
         except Exception as e:
             # if create task fails, set task status to fail
             logger.info("fail to create task {}".format(payload.get("taskId")))
+            output_payload.update({"success": False})
             requests.put("{}/task/{}".format(controller_base_url, task_id),
                          json={"status": "failed", "result": "create task failed" + str(e)})
-            output_payload.update({"success": False})
             publish_mq(body=json.dumps(output_payload), topic=msg.topic, rabbit_url=args.rabbit)
             continue
         else:
@@ -442,13 +442,13 @@ def main():
             elif msg.topic == "keyperson":
                 output_payload.update({"data": [x.to_dict() for x in result]})
 
+            output_payload.update({"success": True})
             requests.put("{}/task/{}".format(controller_base_url, task_id),
                          json={
                              "status": "success",
                              "endTime": datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
                              "result": json.dumps(output_payload)})
 
-            output_payload.update({"success": True})
             publish_mq(body=json.dumps(output_payload), topic=msg.topic, rabbit_url=args.rabbit)
             logger.info("task {} succeed".format(output_payload.get("taskId")))
 
