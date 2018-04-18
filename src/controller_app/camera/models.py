@@ -1,6 +1,22 @@
 from ..database import db
 
 
+equipment_camera = db.Table
+
+
+class Camera(db.Model):
+    __tablename__ = "cameras"
+    id = db.Column(db.String(60), primary_key=True)
+    uri = db.Column(db.String(300), unique=True)
+
+    @property
+    def dict(self):
+        return {
+            "id": self.id,
+            "uri": self.uri
+        }
+
+
 class EquipmentCamera(db.Model):
     __tablename__ = "equipment_cameras"
     id = db.Column(db.String(60), primary_key=True)
