@@ -354,6 +354,27 @@ paths:
         200:
           description: OK
 
+  /camera:
+    post:
+      tags:
+        - camera
+      summary: add camera
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              cameraId:
+                type: string
+              uri:
+                type: string
+      produces:
+        - text/html
+      responses:
+        201: created
+
   /camera/equipment_camera/equipment/{equipmentId}:
     put:
       tags:
@@ -372,8 +393,6 @@ paths:
             type: object
             properties:
               cameraId:
-                type: string
-              uri:
                 type: string
               xmin:
                 type: number
@@ -424,8 +443,6 @@ paths:
             properties:
               cameraId:
                 type: string
-              uri:
-                type: string
               xmin:
                 type: number
               xmax:
@@ -458,8 +475,6 @@ paths:
             type: object
             properties:
               cameraId:
-                type: string
-              uri:
                 type: string
       responses:
         200:
@@ -862,8 +877,7 @@ definitions:
         type: string
       uri:
         type: string
-      workstationId:
-        type: integer
+
 
   Task:
     type: object

@@ -1,6 +1,6 @@
 from flask import Blueprint, request, abort, jsonify
 
-from .models import EquipmentActiveCamera, EquipmentCamera, WorkstationCamera
+from .models import Camera, EquipmentCameraAssociation, EquipmentActiveCameraAssociation
 from ..database import db
 from ..equipment.models import Equipment
 from ..workstation.models import Workstation
@@ -8,20 +8,48 @@ from ..workstation.models import Workstation
 camera_bp = Blueprint("camera", __name__)
 
 
+@camera_bp.route("/camera", methods=["POST"])
+def add_camera():
+    request_json = request.get_json()
+    if request_json is None:
+        abort(400, "cannot retrieve json body")
+
+    if not {"uri", "cameraId"}.issubset(request_json):
+        abort(400, "need to provide camera uri in json body")
+
+    uri = request_json.get("uri")
+    camera_id = request_json.get("cameraId")
+
+    if Camera.query.get(camera_id) is not None:
+        abort(400, "camera id already exists")
+
+    camera = Camera(id=camera_id, uri=uri)
+    db.session.add(camera)
+    db.session.commit()
+    return "OK", 201
+
+
 @camera_bp.route("/camera/equipment_camera/equipment/<int:equipment_id>", methods=["PUT"])
 def set_equipment_camera(equipment_id: int):
     request_json = request.get_json()
-    if not {"uri", "xmin", "xmax", "ymin", "ymax", "cameraId"}.issubset(request_json):
-        abort(400, "need to provide uri, xmin, xmax, ymin, ymax, cameraId in json body")
+    if not {"xmin", "xmax", "ymin", "ymax", "cameraId"}.issubset(request_json):
+        abort(400, "need to provide xmin, xmax, ymin, ymax, cameraId in json body")
 
-    camera = EquipmentCamera(uri=request_json.get("uri"),
-                             xmin=request_json.get("xmin"),
-                             xmax=request_json.get("xmax"),
-                             ymin=request_json.get("ymin"),
-                             ymax=request_json.get("ymax"),
-                             id=request_json.get("cameraId"))
+    camera_id = request_json.get("cameraId")
+    camera = Camera.query.get_or_404(camera_id)
+
     equipment = Equipment.query.get_or_404(equipment_id)
-    equipment.equipment_camera = camera
+
+
+    association = EquipmentCameraAssociation(xmin=request_json.get("xmin"),
+                                             xmax=request_json.get("xmax"),
+                                             ymin=request_json.get("ymin"),
+                                             ymax=request_json.get("ymax"))
+    with db.session.no_autoflush:
+        association.camera = camera
+        association.equipment = equipment
+
+    db.session.flush()
     db.session.commit()
     return "OK"
 
@@ -29,17 +57,21 @@ def set_equipment_camera(equipment_id: int):
 @camera_bp.route("/camera/equipment_active_camera/equipment/<int:equipment_id>", methods=["PUT"])
 def set_equipment_active_camera(equipment_id: int):
     request_json = request.get_json()
-    if not {"uri", "xmin", "xmax", "ymin", "ymax", "cameraId"}.issubset(request_json):
-        abort(400, "need to provide uri, xmin, xmax, ymin, ymax, cameraId in json body")
+    if not {"xmin", "xmax", "ymin", "ymax", "cameraId"}.issubset(request_json):
+        abort(400, "need to provide xmin, xmax, ymin, ymax, cameraId in json body")
 
-    camera = EquipmentActiveCamera(uri=request_json.get("uri"),
-                                   xmin=request_json.get("xmin"),
-                                   xmax=request_json.get("xmax"),
-                                   ymin=request_json.get("ymin"),
-                                   ymax=request_json.get("ymax"),
-                                   id=request_json.get("cameraId"))
+    camera_id = request_json.get("cameraId")
+    camera = Camera.query.get_or_404(camera_id)
+
+    association = EquipmentActiveCameraAssociation(xmin=request_json.get("xmin"),
+                                                   xmax=request_json.get("xmax"),
+                                                   ymin=request_json.get("ymin"),
+                                                   ymax=request_json.get("ymax"))
     equipment = Equipment.query.get_or_404(equipment_id)
-    equipment.equipment_active_camera = camera
+
+    with db.session.no_autoflush:
+        association.camera = camera
+        association.equipment = equipment
     db.session.commit()
     return "OK"
 
@@ -47,12 +79,17 @@ def set_equipment_active_camera(equipment_id: int):
 @camera_bp.route("/camera/keyperson_camera/workstation/<int:workstation_id>", methods=["PUT"])
 def set_keyperson_camera(workstation_id: int):
     request_json = request.get_json()
-    if not {"uri", "cameraId"}.issubset(request_json):
-        abort(400, "need to provide cameraId uri, in json body")
+    if not {"cameraId"}.issubset(request_json):
+        abort(400, "need to provide cameraId in json body")
 
-    workstation  = Workstation.query.get_or_404(workstation_id)
-    camera = WorkstationCamera(id=request_json.get("cameraId"), uri=request_json.get("uri"))
+    workstation = Workstation.query.get_or_404(workstation_id)
+    camera_id = request_json.get("cameraId")
+    camera = Camera.query.get(camera_id)
+    if camera is None:
+        abort(400, "camera id not found")
+
     workstation.camera = camera
+
     db.session.commit()
     return "OK"
 

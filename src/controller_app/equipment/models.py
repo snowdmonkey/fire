@@ -8,8 +8,9 @@ class Equipment(db.Model):
     factory_id = db.Column(db.Integer, db.ForeignKey("factories.id"), index=True)
     workstation_id = db.Column(db.Integer, db.ForeignKey("workstations.id"), index=True)
 
-    equipment_camera = db.relationship("EquipmentCamera", backref="equipment", uselist=False, lazy=True)
-    equipment_active_camera = db.relationship("EquipmentActiveCamera", backref="equipment", uselist=False, lazy=True)
+    equipment_camera = db.relationship("EquipmentCameraAssociation", backref="equipment", uselist=False, lazy=True)
+    equipment_active_camera = db.relationship("EquipmentActiveCameraAssociation",
+                                              backref="equipment", uselist=False, lazy=True)
     equipment_model = db.relationship("EquipmentModel", backref="factory", uselist=False, lazy=True)
 
     @property

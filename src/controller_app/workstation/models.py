@@ -24,7 +24,8 @@ class Workstation(db.Model):
         secondary=worker_location,
         lazy="subquery",
         backref=db.backref("workers", lazy=True))
-    camera = db.relationship("WorkstationCamera", backref="workstation", uselist=False, lazy=True)
+    # camera = db.relationship("Camera", backref="workstation", uselist=False, lazy=True)
+    camera_id = db.Column(db.String(60), db.ForeignKey("cameras.id"))
     equipments = db.relationship("Equipment", backref="workstation", lazy=True)
 
     @property
@@ -34,6 +35,7 @@ class Workstation(db.Model):
             "name": self.name,
             "factoryId": self.factory_id,
             "description": self.description,
+            "camera_id": self.camera_id,
             "workers": [worker.dict for worker in self.workers]
         }
 
