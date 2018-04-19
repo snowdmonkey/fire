@@ -275,7 +275,7 @@ class TaskFactory:
             raise Exception("fail to retrieve camera information, {}, {}".format(r.url, r.status_code))
         else:
             camera_uri = r.json().get("uri")
-            camera_id = r.json().get("id")
+            camera_id = r.json().get("cameraId")
 
         recognizer = SimpleFaceRecognizer(face_encodings=face_encodings)
         video = VideoStream(url=camera_uri, device_id=camera_id)
@@ -298,7 +298,7 @@ class TaskFactory:
         if r.status_code != 200:
             raise Exception("request {} error {}".format(r.url, r.status_code))
         video = VideoStream(url=r.json().get("uri"),
-                            device_id=r.json().get("id"),
+                            device_id=r.json().get("cameraId"),
                             roi=Box(xmin=r.json().get("xmin"),
                                     xmax=r.json().get("xmax"),
                                     ymin=r.json().get("ymin"),
@@ -451,51 +451,6 @@ def main():
 
             publish_mq(body=json.dumps(output_payload), topic=msg.topic, rabbit_url=args.rabbit)
             logger.info("task {} succeed".format(output_payload.get("taskId")))
-
-
-            # if msg.topic == "equipment":
-            #     try:
-            #         #  try to run a equipment task
-            #         result = task.run()  # type: EquipmentResult
-            #
-            #     except Exception as e:
-            #
-            #         # if task fails, update task status to failed and update output payload
-            #         logger.error("task {} fails".format(output_payload.get("taskId")))
-            #         output_payload.update({"success": False})
-            #         requests.put("{}/task/{}".format(controller_base_url, task_id),
-            #                      json={"status": "failed", "result": "execute task failed" + str(e)})
-            #     else:
-            #         # if task succeed, update task status to success, task end time and encode result
-            #         output_payload.update({"data": result.to_dict()})
-            #         requests.put("{}/task/{}".format(controller_base_url, task_id),
-            #                      json={
-            #                          "status": "success",
-            #                          "endTime": datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
-            #                          "result": json.dumps(output_payload)})
-            #         logger.info("task {} succeed".format(output_payload.get("taskId")))
-            # elif msg.topic == "keyperson":
-            #     try:
-            #         #  try to run a equipment task
-            #         result = task.run()  # type: List[FaceRecognitionResult]
-            #
-            #     except Exception as e:
-            #
-            #         # if task fails, update task status to failed and update output payload
-            #         logger.error("task {} fails".format(output_payload.get("taskId")))
-            #         output_payload.update({"success": False})
-            #         requests.put("{}/task/{}".format(controller_base_url, task_id),
-            #                      json={"status": "failed", "result": "execute task failed" + str(e)})
-            #         logger.error("task {} fails".format(output_payload.get("taskId")))
-            #     else:
-            #         # if task succeed, update task status to success, task end time and encode result
-            #         output_payload.update({"data": [x.to_dict() for x in result]})
-            #         requests.put("{}/task/{}".format(controller_base_url, task_id),
-            #                      json={
-            #                          "status": "success",
-            #                          "endTime": datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
-            #                          "result": json.dumps(output_payload)})
-            #         logger.info("task {} succeed".format(output_payload.get("taskId")))
 
 
 if __name__ == "__main__":

@@ -38,7 +38,8 @@ class EquipmentCameraAssociation(db.Model):
             "ymin": self.ymin,
             "ymax": self.ymax,
             "cameraId": self.camera_id,
-            "equipmentId": self.equipment_id
+            "equipmentId": self.equipment_id,
+            "uri": self.camera.uri
         }
 
 
@@ -62,7 +63,8 @@ class EquipmentActiveCameraAssociation(db.Model):
             "ymin": self.ymin,
             "ymax": self.ymax,
             "cameraId": self.camera_id,
-            "equipmentId": self.equipment_id
+            "equipmentId": self.equipment_id,
+            "uri": self.camera.uri
         }
 
 # class EquipmentCamera(db.Model):
