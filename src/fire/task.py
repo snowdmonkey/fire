@@ -433,7 +433,7 @@ def main():
             logger.error("task {} fails".format(output_payload.get("taskId")))
             output_payload.update({"success": False})
             requests.put("{}/task/{}".format(controller_base_url, task_id),
-                         json={"status": "failed", "result": "execute task failed" + str(e)})
+                         json={"status": "failed", "result": "execute task failed " + str(e)})
             publish_mq(body=json.dumps(output_payload), topic=msg.topic, rabbit_url=args.rabbit)
         else:
             # if task succeed, update task status to success, task end time and encode result
