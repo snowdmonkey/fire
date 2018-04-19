@@ -172,7 +172,7 @@ class TransferTrainer:
                     feed_dict={"input/BottleneckInputPlaceholder:0": bottlenecks, "input/GroundTruthInput:0": label})
             else:
                 acc, cross_entropy, _ = self._sess.run(
-                    ["eval/Accuracy:0","cross_entropy/sparse_softmax_cross_entropy_loss/value:0", train_op],
+                    ["eval/Accuracy:0", "cross_entropy/sparse_softmax_cross_entropy_loss/value:0", train_op],
                     feed_dict={"input/BottleneckInputPlaceholder:0": bottlenecks, "input/GroundTruthInput:0": label})
                 # self._logger.info("batch {} finished".format(i))
             acc_list.append(acc)

@@ -40,7 +40,6 @@ def set_equipment_camera(equipment_id: int):
 
     equipment = Equipment.query.get_or_404(equipment_id)
 
-
     association = EquipmentCameraAssociation(xmin=request_json.get("xmin"),
                                              xmax=request_json.get("xmax"),
                                              ymin=request_json.get("ymin"),
@@ -72,6 +71,7 @@ def set_equipment_active_camera(equipment_id: int):
     with db.session.no_autoflush:
         association.camera = camera
         association.equipment = equipment
+    db.session.flush()
     db.session.commit()
     return "OK"
 

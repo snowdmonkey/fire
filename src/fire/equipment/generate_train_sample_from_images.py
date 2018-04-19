@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 import random
+import argparse
 from fire.misc import Box
 from pathlib import Path
 
@@ -46,4 +47,8 @@ def main(img_folder: Path, box: Box):
 
 
 if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser("generate train samples for equipment existence training check")
+
+
     main(Path(r"C:\Users\h232559\Desktop\test_imgs"), Box(xmin=0.23385, xmax=0.57604, ymin=0.10556, ymax=0.40556))
