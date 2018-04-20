@@ -1,7 +1,9 @@
 var returnStructure = [
   {
     "deviceId": 12346,
-    // 摄像头id
+    // 摄像头id,
+    "equipmentId": 45678,
+    // 被监测设备id
     "taskId": 12346,
     // 在trigger分析任务时产生
     "time": "2018-04-02 14:00:00",
@@ -26,6 +28,8 @@ var returnStructure = [
   {
     "deviceId": 12346,
     // 摄像头id
+    "equipmentId": 45678,
+    // 被监测设备id
     "taskId": 12346,
     // 在trigger分析任务时产生
     "time": "2018-04-02 14:00:00",
@@ -33,10 +37,10 @@ var returnStructure = [
     "success": true,
     // 任务是否成功进行
     "data": {
-      // 机器存在分析结果
+      // 机器是否在工作分析结果
       "confidence": 0.94,
-      // 机器在的概率
-      "toolExists": true,
+      // 机器在工作的概率
+      "toolWorking": true,
       // 机器在的结论， 平台也可以根据概率自行得出结论
       "prof": "base64:xxxxxxxxxxxxx"
       // base64编码jpg图像， 为捕捉改机器的图片

@@ -80,7 +80,8 @@ class EquipmentResult(Result):
         :param device_id: camera id
         """
         super().__init__(device_id=device_id, confidence=confidence, prof=prof)
-        self.confidence = confidence
+        # self.confidence = confidence
+        # self.equipment_id = equipment_id
 
     def to_dict(self):
         r = self.to_base_dict()
@@ -192,6 +193,7 @@ class EquipmentTask(Task):
         """
         super().__init__(video)
         self._predictor = presence_predictor
+        # self._equipment_id = equipment_id
         # self._start_time = datetime.now()
 
     def run(self) -> EquipmentResult:
@@ -384,6 +386,9 @@ def main():
             deadline = datetime.strptime(payload.get("deadline"), "%Y-%m-%dT%H:%M:%S")
             if task_id is None:
                 raise Exception("cannot find task id")
+            if msg.topic in ("equipment", "equipment_active"):
+                equipment_id = payload.get("equipmentId")
+                output_payload.update({"equipmentId": equipment_id})
         except json.JSONDecodeError:
             logger.error("fail to decode json message")
             continue
