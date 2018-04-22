@@ -1,11 +1,13 @@
-import cv2
-import numpy as np
-import random
 import argparse
+import random
 import time
-from fire.misc import Box
 from pathlib import Path
 from typing import Tuple
+
+import cv2
+import numpy as np
+
+from fire.misc import Box
 from ..video import VideoStream
 
 
@@ -40,7 +42,6 @@ def generate_equipment_n_background(img: np.ndarray, box: Box) -> Tuple[np.ndarr
 
 
 def generate_from_folder(img_folder: Path, box: Box):
-
     equipment_img_folder = img_folder / "equipment"
     background_img_folder = img_folder / "background"
 
@@ -48,7 +49,6 @@ def generate_from_folder(img_folder: Path, box: Box):
     background_img_folder.mkdir(exist_ok=True)
 
     for img_path in img_folder.glob("*.jpg"):
-
         equipment_img_path = equipment_img_folder / img_path.name
         background_img_path = background_img_folder / img_path.name
 

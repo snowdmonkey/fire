@@ -25,7 +25,7 @@ def add_equipment_task(equipment_id: int):
     try:
         deadline = datetime.strptime(deadline, "%Y-%m-%dT%H:%M:%S")
     except (TypeError, ValueError) as e:
-        logger.exception(e)
+        logger.error(e)
         abort(400, "deadline not provided or not in %Y-%m-%dT%H:%M:%S format")
 
     equipment = Equipment.query.get_or_404(equipment_id)
