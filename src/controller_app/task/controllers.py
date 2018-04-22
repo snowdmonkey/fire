@@ -15,7 +15,8 @@ from ..equipment.models import Equipment
 
 task_bp = Blueprint("task", __name__)
 
-logger = logging.getLogger(__name__)
+# logger = logging.getLogger(__name__)
+logger = current_app.logger
 
 
 @task_bp.route("/task/equipment/equipment/<int:equipment_id>", methods=["POST"])
@@ -71,7 +72,7 @@ def add_equipment_active_task(equipment_id: int):
     try:
         deadline = datetime.strptime(deadline, "%Y-%m-%dT%H:%M:%S")
     except (TypeError, ValueError) as e:
-        logger.exception(e)
+        logger.error(e)
         abort(400, "deadline not provided or not in %Y-%m-%dT%H:%M:%S format")
 
     equipment = Equipment.query.get_or_404(equipment_id)
@@ -119,7 +120,7 @@ def add_keyperson_task(workstation_id: int):
     try:
         deadline = datetime.strptime(deadline, "%Y-%m-%dT%H:%M:%S")
     except (TypeError, ValueError) as e:
-        logger.exception(e)
+        logger.error(e)
         abort(400, "deadline not provided or not in %Y-%m-%dT%H:%M:%S format")
 
     if not isinstance(duration, int):
