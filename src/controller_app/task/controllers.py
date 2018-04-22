@@ -120,7 +120,7 @@ def add_keyperson_task(workstation_id: int):
     try:
         deadline = datetime.strptime(deadline, "%Y-%m-%dT%H:%M:%S")
     except (TypeError, ValueError) as e:
-        logger.error(e)
+        current_app.logger.error(e)
         abort(400, "deadline not provided or not in %Y-%m-%dT%H:%M:%S format")
 
     if not isinstance(duration, int):
