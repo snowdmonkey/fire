@@ -15,8 +15,8 @@ from ..equipment.models import Equipment
 
 task_bp = Blueprint("task", __name__)
 
-# logger = logging.getLogger(__name__)
-logger = current_app.logger
+logger = logging.getLogger(__name__)
+# logger = current_app.logger
 
 
 @task_bp.route("/task/equipment/equipment/<int:equipment_id>", methods=["POST"])
