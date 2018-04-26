@@ -1,7 +1,7 @@
 import logging
 import threading
 from typing import Optional
-from multiprocessing import Process
+from queue import Queue, Empty
 
 import cv2
 import numpy as np
@@ -21,22 +21,25 @@ class VideoStreamClosedError(Exception):
 
 
 class VideoStream:
-    def __init__(self, url: str, device_id: str, roi: Optional[Box] = None):
+    def __init__(self, url: str, device_id: str, n_frame_skip: int = 2, roi: Optional[Box] = None):
         """
         constructor
 
         :param url: url for the video stream
         :param device_id: str
+        :param n_frame_skip: number of frames to skip before decode a frame
         :param roi: region of interests in the video frames
         """
         self._video_url = url
         self._roi = roi
         self._device_id = device_id
-        self._current_frame = None
+        # self._current_frame = None
+        self._q = Queue(16)  # a buffer to store the latest frames
         self._running = False
         self._thread = threading.Thread(target=self._update_current_frame)
         # self._thread = Process(target=self._update_current_frame)
         self._cap = None
+        self._n_frame_skip = n_frame_skip
 
     @property
     def device_id(self):
@@ -57,36 +60,41 @@ class VideoStream:
         self._connect()
 
     def _update_current_frame(self):
-        # cap = cv2.VideoCapture(self._video_url)
-        # if cap.isOpen() is False:
-        #
 
         while self._running is True:
+            logger.debug("queue size: {}".format(self._q.qsize()))
+
             if self._cap.isOpened() is False:
                 raise VideoStreamClosedError("lost connection to device {}".format(self._device_id))
 
-            for _ in range(9):  # grab 9 frames but do not decode to save computational resource
+            for _ in range(self._n_frame_skip):  # grab frames but do not decode to save computational resource
                 self._cap.grab()
 
-            for _ in range(10):  # try to read frame for 10 times
-                ret, frame = self._cap.read()
-                if ret is True:
-                    break
-                else:
-                    time.sleep(0.1)
-
-            if frame is None:  # reconnect if cannot read a frame
-                self._reconnect()
+            if self._cap.grab():
+                if not self._q.full():
+                    ret, frame = self._cap.retrieve()
+                    if ret is True:
+                        self._q.put(frame)
             else:
-                self._current_frame = frame
+                self._reconnect()
+
+            # for _ in range(10):  # try to read frame for 10 times
+            #     ret, frame = self._cap.read()
+            #     if ret is True:
+            #         break
+            #     else:
+            #         time.sleep(0.1)
+
+            # if frame is None:  # reconnect if cannot read a frame
+            #     self._reconnect()
+            # else:
+            #     self._current_frame = frame
 
         self._cap.release()
 
     def start(self):
         self._running = True
-        # cap = cv2.VideoCapture(self._video_url)
         self._connect()
-        _, self._current_frame = self._cap.read()
 
         self._thread.start()
 
@@ -99,8 +107,13 @@ class VideoStream:
 
         :return: ndarray as the current frame
         """
+        try:
+            frame = self._q.get(block=True, timeout=300)
+        except Empty as e:
+            self.close()
+            raise e
 
-        return self._current_frame
+        return frame
 
     def read_current_roi(self) -> Optional[np.ndarray]:
         """
