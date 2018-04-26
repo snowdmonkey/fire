@@ -85,48 +85,6 @@ class SimpleFaceRecognizer(FaceRecognizer):
 
         return ids, boxes, scores
 
-    # def batch_recognize(self, imgs: List[np.ndarray]) -> List[Tuple[List[str], List[Box], List[float]]]:
-    #     results = list()
-    #     locations_list = face_recognition.batch_face_locations(imgs)
-    #
-    #     for i, locations in enumerate(locations_list):
-    #         boxes = list()  # type: List[Box]
-    #         scores = list()  # type: List[float]
-    #         ids = list()  # type: List[str]
-    #
-    #         img = imgs[i]
-    #
-    #         face_encodings = face_recognition.face_encodings(img, known_face_locations=locations)
-    #
-    #         for face_encoding in face_encodings:
-    #             distance = face_recognition.face_distance(self._face_encodings, face_encoding)
-    #             min_index = distance.argmin()
-    #             ids.append(self._face_ids[min_index])
-    #             scores.append(1.0 - distance[min_index])
-    #
-    #         for face_location in locations:
-    #             box = Box(face_location[3], face_location[0],
-    #                       face_location[1] - face_location[3], face_location[2] - face_location[0])
-    #             boxes.append(box)
-    #
-    #         results.append((ids, boxes, scores))
-    #
-    #     self._logger.debug("processed {} faces".format(len(imgs)))
-    #
-    #     return results
-    #
-    # def process_stream(self, imgs: Iterator[np.ndarray], n_process: int):
-    #     """
-    #     process images
-    #     :param imgs: an iterator that yields imgs
-    #     :param n_process: number of processes to use
-    #     :return: None
-    #     """
-    #     pool = Pool(n_process)
-    #     # def target_fun(img):
-    #     #     self.recognize(img)
-    #     pool.map(self.recognize, imgs)
-    #     pool.close()
 
 
 

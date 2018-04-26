@@ -29,6 +29,23 @@ def add_camera():
     return "OK", 201
 
 
+@camera_bp.route("/camera/<string:camera_id>", methods=["PUT"])
+def set_camera(camera_id: str):
+    request_json = request.get_json()
+    if request_json is None:
+        abort(400, "cannot retrieve json body")
+
+    camera = Camera.query.get(camera_id)
+    if camera is None:
+        abort(404, "unknown camera id")
+
+    if "uri" in request_json:
+        camera.uri = request_json.get("uri")
+
+    db.session.commit()
+    return "OK"
+
+
 @camera_bp.route("/camera/equipment_camera/equipment/<int:equipment_id>", methods=["PUT"])
 def set_equipment_camera(equipment_id: int):
     request_json = request.get_json()

@@ -1,9 +1,11 @@
 import logging
 import threading
 from typing import Optional
+from multiprocessing import Process
 
 import cv2
 import numpy as np
+import time
 
 from .misc import Box
 
@@ -33,6 +35,7 @@ class VideoStream:
         self._current_frame = None
         self._running = False
         self._thread = threading.Thread(target=self._update_current_frame)
+        # self._thread = Process(target=self._update_current_frame)
         self._cap = None
 
     @property
@@ -62,10 +65,15 @@ class VideoStream:
             if self._cap.isOpened() is False:
                 raise VideoStreamClosedError("lost connection to device {}".format(self._device_id))
 
+            for _ in range(9):  # grab 9 frames but do not decode to save computational resource
+                self._cap.grab()
+
             for _ in range(10):  # try to read frame for 10 times
                 ret, frame = self._cap.read()
                 if ret is True:
                     break
+                else:
+                    time.sleep(0.1)
 
             if frame is None:  # reconnect if cannot read a frame
                 self._reconnect()
@@ -79,12 +87,6 @@ class VideoStream:
         # cap = cv2.VideoCapture(self._video_url)
         self._connect()
         _, self._current_frame = self._cap.read()
-
-        # if cap.isOpened() is False:
-        #     raise VideoStreamClosedError()
-        # else:
-        #     _, self._current_frame = cap.read()
-        #     self._cap = cap
 
         self._thread.start()
 

@@ -373,7 +373,32 @@ paths:
       produces:
         - text/html
       responses:
-        201: created
+        201:
+          description: created
+
+  /camera/{camera_id}:
+    put:
+      tags:
+        - camera
+      summary: set camera property
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              uri:
+                type: string
+        - name: camera_id
+          in: path
+          required: true
+          type: string
+      produces:
+        - text/html
+      responses:
+        200:
+          description: OK
 
   /camera/equipment_camera/equipment/{equipmentId}:
     put:

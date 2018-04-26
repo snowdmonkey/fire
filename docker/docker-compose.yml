@@ -7,6 +7,7 @@ services:
     restart: always
     environment:
       - MYSQL_ROOT_PASSWORD=HON123well
+      - MYSQL_DATABASE=fire
     volumes:
       - /etc/mysql/conf.d:/etc/mysql/conf.d
       - /var/lib/mysql:/var/lib/mysql
