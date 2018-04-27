@@ -111,6 +111,8 @@ class TransferTrainer:
         :param train_proportion: proportion of the training set
         :return: (train_dataset, test_dataset)
         """
+
+        self._logger.info("start to read images")
         sub_folders = [x for x in path.iterdir() if x.is_dir()]  # type: List[Path]
         if len(sub_folders) != self._n_classes:
             raise RuntimeError("number of n_classes does not match number of sub folders")
@@ -137,36 +139,52 @@ class TransferTrainer:
 
         random.shuffle(train_set)
         random.shuffle(test_set)
+        self._logger.info("train and test dataset created")
         return train_set, test_set
 
+    def _get_bottle_neck(self, dataset: List[Tuple[int, np.ndarray]]) -> List[Tuple[int, np.ndarray]]:
+        """
+        calculate the bottle neck tensors of a training dataset
+        :param dataset: raw dataset with labels and features
+        :return: transformed dataset with labels and bottle neck tensors
+        """
+        result = list()
+
+        i = 0
+        for label, feature in dataset:
+            bottleneck_tensor = self._graph.get_tensor_by_name('pool_3/_reshape:0')
+            bottleneck = self._sess.run(bottleneck_tensor, feed_dict={"Mul:0": [feature]})
+            bottleneck = np.squeeze(bottleneck)
+            result.append((label, bottleneck))
+            self._logger.info("generated one bottleneck: {}".format(i))
+            i += 1
+        return result
+
     def _train_or_eval_one_epoch(self, dataset: List[Tuple[int, np.ndarray]],
-                                 batch_size: int, eval: bool) -> Tuple[float, float]:
+                                 from_bottle_neck: bool,
+                                 batch_size: int, eval_flag: bool) -> Tuple[float, float]:
         """
         train one epoch on the dataset
         :param dataset: dict create in _create_train_dataset
         :param batch_size: batch size
-        :param eval: true for eval mode, false for train equipment_model
+        :param eval_flag: true for eval mode, false for train equipment_model
+        :param from_bottle_neck: if true, the features in the dataset should be bottle neck tenor; if false, raw feature
         :return: accuracy mean, cross entropy mean
         """
         train_op = self._graph.get_operation_by_name("train/TrainOp")
-        # feature_entry = self._graph.get_tensor_by_name("import/Mul:0")
-        # label_entry = self._graph.get_operation_by_name("input/GroundTruthInput")
-        bottleneck_tensor = self._graph.get_tensor_by_name('pool_3/_reshape:0')
         acc_list = list()
         cross_entropy_list = list()
+
+        if not from_bottle_neck:
+            dataset = self._get_bottle_neck(dataset)
+
         for i in range(len(dataset) // batch_size):
             data_batch = dataset[(i*batch_size):((i+1)*batch_size)]
-            features = [x[1] for x in data_batch]
-            bottlenecks = list()
-            for feature in features:
-                feature = np.stack([feature])
-                bottleneck = self._sess.run(bottleneck_tensor, feed_dict={"Mul:0": feature})
-                bottleneck = np.squeeze(bottleneck)
-                bottlenecks.append(bottleneck)
+            bottlenecks = [x[1] for x in data_batch]
             bottlenecks = np.stack(bottlenecks)
 
             label = np.array([x[0] for x in data_batch])
-            if eval is True:
+            if eval_flag is True:
                 acc, cross_entropy = self._sess.run(
                     ["eval/Accuracy:0", "cross_entropy/sparse_softmax_cross_entropy_loss/value:0"],
                     feed_dict={"input/BottleneckInputPlaceholder:0": bottlenecks, "input/GroundTruthInput:0": label})
@@ -191,16 +209,17 @@ class TransferTrainer:
         :param n_epochs: number of epochs to run
         :return: None
         """
-        # with self._graph.as_default():
-        #     init = tf.global_variables_initializer()
-        #     self._sess.run(init)
         train_set, test_set = self._create_train_sets(folder_path, train_proportion)
 
+        train_set, test_set = self._get_bottle_neck(train_set), self._get_bottle_neck(train_set)
+
         for i in range(n_epochs):
-            acc, loss = self._train_or_eval_one_epoch(train_set, batch_size=batch_size, eval=False)
+            acc, loss = self._train_or_eval_one_epoch(train_set, batch_size=batch_size,
+                                                      eval_flag=False, from_bottle_neck=True)
             self._logger.info("epoch {}: train accuracy: {}; train loss: {}".format(i, round(acc, 5), round(loss, 5)))
 
-            acc, loss = self._train_or_eval_one_epoch(test_set, batch_size=batch_size, eval=True)
+            acc, loss = self._train_or_eval_one_epoch(test_set, batch_size=batch_size,
+                                                      eval_flag=True, from_bottle_neck=True)
             self._logger.info("epoch {}: test  accuracy: {}; test  loss: {}".format(i, round(acc, 5), round(loss, 5)))
             #     self._eval_one_epoch(test_set)
 
@@ -221,33 +240,22 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("path", type=str, help="folder that the images are stored")
+    parser.add_argument("img_path", type=str, help="folder that the images are stored")
+    parser.add_argument("output_path", type=str, help="folder to store the result")
     args = parser.parse_args()
 
     trainer = TransferTrainer(2)
-    img_path = Path(args.path)
-    pb_path = img_path / "result.pb"
-    class_map_path = img_path / "class_map.json"
+    img_path = Path(args.img_path)
+    output_path = Path(args.output_path)
+    output_path.mkdir(parents=True, exist_ok=True)
 
-    trainer.train_folder(img_path, batch_size=100, train_proportion=0.8, n_epochs=5)
+    pb_path = output_path / "result.pb"
+    class_map_path = output_path / "class_map.json"
+
+    trainer.train_folder(img_path, batch_size=64, train_proportion=0.8, n_epochs=5)
 
     with pb_path.open("wb") as f:
-        class_map=trainer.export(f)
+        class_map = trainer.export(f)
 
     with class_map_path.open("w") as f:
         json.dump(class_map, f)
-
-    # with open("result.pb", "wb") as f:
-    #     trainer.export(f)
-
-    # with open("class_map.json", "w") as f:
-    #     json.dump(class_map, f)
-
-
-    # train_set, test_set = trainer._create_train_sets(Path("/home/xuefeng/flower_photos"), 0.8)
-    # print(test_set[0])
-
-    # for op in trainer._graph.get_operations():
-    #     print(op.name)
-        # op = trainer._graph.get_operation_by_name("import/Mul")
-        # print(op.shape)
