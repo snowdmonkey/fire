@@ -46,6 +46,8 @@ services:
     depends_on:
       - db
       - kafka
+    deploy:
+      replicas: 2
 
   analyst:
     build:
@@ -60,4 +62,4 @@ services:
       - controller
     restart: always
     deploy:
-      replicas: 10
+      replicas: 20

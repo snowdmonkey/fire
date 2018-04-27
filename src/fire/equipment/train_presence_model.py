@@ -92,10 +92,8 @@ class TransferTrainer:
         config = tf.ConfigProto()
         config.gpu_options.allow_growth = True
         sess = tf.Session(graph=self._graph, config=config)
-        # sess.run(tf.global_variables_initializer())
+
         with self._graph.as_default():
-            # init = tf.global_variables_initializer()
-            # sess.run(init)
             sess.run(tf.global_variables_initializer())
 
         return sess
@@ -179,7 +177,7 @@ class TransferTrainer:
             cross_entropy_list.append(cross_entropy)
         acc_mean = sum(acc_list) / len(acc_list)
         cross_entropy_mean = sum(cross_entropy_list) / len(cross_entropy_list)
-        # x = self._sess.run("final_retrain_ops/biases/final_biases:0")
+
         return acc_mean, cross_entropy_mean
 
     def train_folder(self, folder_path: Path, batch_size: int, train_proportion: float, n_epochs: int):
@@ -191,9 +189,7 @@ class TransferTrainer:
         :param n_epochs: number of epochs to run
         :return: None
         """
-        # with self._graph.as_default():
-        #     init = tf.global_variables_initializer()
-        #     self._sess.run(init)
+
         train_set, test_set = self._create_train_sets(folder_path, train_proportion)
 
         for i in range(n_epochs):
@@ -202,7 +198,6 @@ class TransferTrainer:
 
             acc, loss = self._train_or_eval_one_epoch(test_set, batch_size=batch_size, eval=True)
             self._logger.info("epoch {}: test  accuracy: {}; test  loss: {}".format(i, round(acc, 5), round(loss, 5)))
-            #     self._eval_one_epoch(test_set)
 
     def export(self, fp: IO[bytes]):
         """
@@ -236,18 +231,3 @@ if __name__ == "__main__":
 
     with class_map_path.open("w") as f:
         json.dump(class_map, f)
-
-    # with open("result.pb", "wb") as f:
-    #     trainer.export(f)
-
-    # with open("class_map.json", "w") as f:
-    #     json.dump(class_map, f)
-
-
-    # train_set, test_set = trainer._create_train_sets(Path("/home/xuefeng/flower_photos"), 0.8)
-    # print(test_set[0])
-
-    # for op in trainer._graph.get_operations():
-    #     print(op.name)
-        # op = trainer._graph.get_operation_by_name("import/Mul")
-        # print(op.shape)
