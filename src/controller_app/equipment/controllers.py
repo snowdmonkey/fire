@@ -18,6 +18,10 @@ def add_equipment(factory_id: int):
     description = request_body.get("description")
     if equipment_id is None:
         abort(400, "need to provide equipment id")
+
+    equipment = Equipment.query.get(equipment_id)
+    if equipment is not None:
+        abort(400, "equipment id duplicate")
     equipment = Equipment(id=int(equipment_id), description=description)
     try:
         factory.equipments.append(equipment)
