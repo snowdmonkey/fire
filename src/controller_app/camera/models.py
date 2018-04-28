@@ -27,9 +27,6 @@ class EquipmentCameraAssociation(db.Model):
     ymin = db.Column(db.Float)
     ymax = db.Column(db.Float)
 
-    # camera = db.relationship("Camera", backref="equipments")
-    # equipment = db.relationship("Equipment", backref="equipment_camera")
-
     @property
     def dict(self):
         return {

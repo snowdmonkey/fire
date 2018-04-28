@@ -52,21 +52,50 @@ def set_equipment_camera(equipment_id: int):
     if not {"xmin", "xmax", "ymin", "ymax", "cameraId"}.issubset(request_json):
         abort(400, "need to provide xmin, xmax, ymin, ymax, cameraId in json body")
 
+    try:
+        xmin = float(request_json.get("xmin"))
+        xmax = float(request_json.get("xmax"))
+        ymin = float(request_json.get("ymin"))
+        ymax = float(request_json.get("ymax"))
+    except (ValueError, TypeError):
+        abort(400, "need to provide xmin, xmax, ymin, ymax as float")
+
+    if not 0.0 <= xmin < xmax <= 1.0:
+        abort(400, "0.0 <= xmin < xmax <= 1.0 not satisfied")
+
+    if not 0.0 <= ymin < ymax <= 1.0:
+        abort(400, "0.0 <= ymin < ymax <= 1.0 not satisfied")
+
     camera_id = request_json.get("cameraId")
-    camera = Camera.query.get_or_404(camera_id)
+    camera = Camera.query.get(camera_id)
+    if camera is None:
+        abort(400, "no such camera id")
 
     equipment = Equipment.query.get_or_404(equipment_id)
 
-    association = EquipmentCameraAssociation(xmin=request_json.get("xmin"),
-                                             xmax=request_json.get("xmax"),
-                                             ymin=request_json.get("ymin"),
-                                             ymax=request_json.get("ymax"))
-    with db.session.no_autoflush:
-        association.camera = camera
-        association.equipment = equipment
+    association = EquipmentCameraAssociation.query.filter_by(equipment_id=equipment_id).first()
 
-    db.session.flush()
-    db.session.commit()
+    if association is None:
+
+        association = EquipmentCameraAssociation(xmin=xmin,
+                                                 xmax=xmax,
+                                                 ymin=ymin,
+                                                 ymax=ymax)
+        with db.session.no_autoflush:
+            association.camera = camera
+            association.equipment = equipment
+
+        db.session.flush()
+        db.session.commit()
+
+    else:
+        association.xmin = xmin
+        association.xmax = xmax
+        association.ymin = ymin
+        association.ymax = ymax
+        association.camera = camera
+        db.session.commit()
+
     return "OK"
 
 
@@ -76,20 +105,50 @@ def set_equipment_active_camera(equipment_id: int):
     if not {"xmin", "xmax", "ymin", "ymax", "cameraId"}.issubset(request_json):
         abort(400, "need to provide xmin, xmax, ymin, ymax, cameraId in json body")
 
-    camera_id = request_json.get("cameraId")
-    camera = Camera.query.get_or_404(camera_id)
+    try:
+        xmin = float(request_json.get("xmin"))
+        xmax = float(request_json.get("xmax"))
+        ymin = float(request_json.get("ymin"))
+        ymax = float(request_json.get("ymax"))
+    except (ValueError, TypeError):
+        abort(400, "need to provide xmin, xmax, ymin, ymax as float")
 
-    association = EquipmentActiveCameraAssociation(xmin=request_json.get("xmin"),
-                                                   xmax=request_json.get("xmax"),
-                                                   ymin=request_json.get("ymin"),
-                                                   ymax=request_json.get("ymax"))
+    if not 0.0 <= xmin < xmax <= 1.0:
+        abort(400, "0.0 <= xmin < xmax <= 1.0 not satisfied")
+
+    if not 0.0 <= ymin < ymax <= 1.0:
+        abort(400, "0.0 <= ymin < ymax <= 1.0 not satisfied")
+
+    camera_id = request_json.get("cameraId")
+    camera = Camera.query.get(camera_id)
+    if camera is None:
+        abort(400, "no such camera id")
+
     equipment = Equipment.query.get_or_404(equipment_id)
 
-    with db.session.no_autoflush:
+    association = EquipmentActiveCameraAssociation.query.filter_by(equipment_id=equipment_id).first()
+
+    if association is None:
+
+        association = EquipmentActiveCameraAssociation(xmin=xmin,
+                                                       xmax=xmax,
+                                                       ymin=ymin,
+                                                       ymax=ymax)
+        with db.session.no_autoflush:
+            association.camera = camera
+            association.equipment = equipment
+
+        db.session.flush()
+        db.session.commit()
+
+    else:
+        association.xmin = xmin
+        association.xmax = xmax
+        association.ymin = ymin
+        association.ymax = ymax
         association.camera = camera
-        association.equipment = equipment
-    db.session.flush()
-    db.session.commit()
+        db.session.commit()
+
     return "OK"
 
 
