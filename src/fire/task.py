@@ -277,7 +277,7 @@ class TaskFactory:
             raise Exception("fail to retrieve camera information, {}, {}".format(r.url, r.status_code))
         else:
             camera_uri = r.json().get("uri")
-            camera_id = r.json().get("cameraId")
+            camera_id = r.json().get("id")
 
         recognizer = SimpleFaceRecognizer(face_encodings=face_encodings)
         video = VideoStream(url=camera_uri, device_id=camera_id)
