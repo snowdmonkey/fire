@@ -57,7 +57,7 @@ services:
     container_name: fire-analyst
     environment:
       - TF_CPP_MIN_LOG_LEVEL=2
-    command: http://172.26.174.105:5000 172.26.174.105:9092 amqp://cccf-alarm:Ad@73^5CmsqD@111.204.162.114:5672
+    command: http://172.26.174.105:5000 172.26.174.105:9092 amqp://rqadmin:rqadmin@wxweb1.chinacloudapp.cn:5672
     depends_on:
       - controller
     restart: always
